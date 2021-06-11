@@ -63,7 +63,7 @@ public:
 
       std::cin>>input;
       if(input=="ag"){new_goal();}
-      else{std::cout<<"Please re-enter one of the aforementioned acronyms.\n";main_menu();}
+      else{std::cout<<"Please re-enter one of the aforementioned acronyms.\n"; rclcpp::shutdown();}
     }
     // This function would add a new goal into the map. With a custom goal_name
     void new_goal(){
