@@ -34,7 +34,7 @@ public:
 private:
 
 rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goal_subscriber;
-goal selected_goal;
+goal_plotter::goal selected_goal;
 
 };
 

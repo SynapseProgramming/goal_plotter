@@ -53,9 +53,9 @@ public:
       return input=="y" ? true: false;
     }
 private:
-  std::map<std::string,goal> goal_map;
+  std::map<std::string,goal_plotter::goal> goal_map;
 
-  
+
 
 };
 
