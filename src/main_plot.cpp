@@ -5,16 +5,9 @@
 #include <map>
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
+#include "goal_plotter/goal.h"
 
 #define be RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT
-
-struct goal{
-    double x;
-    double y;
-    double z;
-    double w;
-};
-
 
 
 class plot : public rclcpp::Node
