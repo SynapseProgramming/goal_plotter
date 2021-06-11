@@ -37,12 +37,12 @@ public:
       std::string goal_name;
       std::cin>>goal_name;
       if(wait_confirmation()){
-
+       //TODO: when the user confirms that he wants this goal location,  call the service which
+       // gets the current selected goal value and stores it inside a map
 
       }
       else main_menu();
       //TODO: complete the new goal function
-      //TODO: figure out how to publish a marker for visualisation
 
     }
     // the wait_confirmation function would prompt the user to enter (y\n). Function returns true if (y) and false if (anything else if entered)
@@ -54,8 +54,6 @@ public:
     }
 private:
   std::map<std::string,goal_plotter::goal> goal_map;
-
-
 
 };
 

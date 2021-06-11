@@ -26,7 +26,7 @@ public:
        selected_goal.y=msg->pose.position.y;
        selected_goal.z=msg->pose.orientation.z;
        selected_goal.w=msg->pose.orientation.w;
-
+       //TODO: create a service which would return the current selected goal value
     };
 
     goal_subscriber = this->create_subscription<geometry_msgs::msg::PoseStamped>("goal_pose",10,goal_callback);
