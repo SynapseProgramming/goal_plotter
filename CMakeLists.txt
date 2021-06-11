@@ -23,11 +23,21 @@ find_package(geometry_msgs REQUIRED)
 #add executables
 add_executable(goal_plotter src/main_plot.cpp)
 ament_target_dependencies(goal_plotter rclcpp geometry_msgs)
-
 target_include_directories(goal_plotter
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
+
+
+add_executable(get_goal src/get_goal.cpp)
+ament_target_dependencies(get_goal rclcpp geometry_msgs)
+target_include_directories(get_goal
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+
+
 
 install(
   DIRECTORY include/
@@ -44,7 +54,7 @@ install(
 
 install(TARGETS
   goal_plotter
-
+  get_goal
   DESTINATION lib/${PROJECT_NAME})
 
 
