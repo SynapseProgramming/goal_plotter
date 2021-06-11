@@ -18,7 +18,11 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
+#add executables
+add_executable(goal_plotter src/main_plot.cpp)
+ament_target_dependencies(goal_plotter rclcpp geometry_msgs)
 
 install(
   DIRECTORY
@@ -27,6 +31,13 @@ install(
   param
   DESTINATION share/${PROJECT_NAME}
 )
+
+install(TARGETS
+  goal_plotter
+
+  DESTINATION lib/${PROJECT_NAME})
+
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
