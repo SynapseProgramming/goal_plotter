@@ -19,14 +19,24 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+ "srv/Sgoal.srv"
+ )
+
+
+
 
 #add executables
-add_executable(goal_plotter src/main_plot.cpp)
-ament_target_dependencies(goal_plotter rclcpp geometry_msgs)
-target_include_directories(goal_plotter
+add_executable(main_plot src/main_plot.cpp)
+ament_target_dependencies(main_plot rclcpp geometry_msgs)
+target_include_directories(main_plot
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
+rosidl_target_interfaces(main_plot ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 
 add_executable(get_goal src/get_goal.cpp)
@@ -35,7 +45,7 @@ target_include_directories(get_goal
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
-
+rosidl_target_interfaces(get_goal ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 
 
@@ -48,12 +58,13 @@ install(
   DIRECTORY
   launch
   rviz
+  srv
   param
   DESTINATION share/${PROJECT_NAME}
 )
 
 install(TARGETS
-  goal_plotter
+  main_plot
   get_goal
   DESTINATION lib/${PROJECT_NAME})
 
@@ -65,7 +76,7 @@ if(BUILD_TESTING)
   # uncomment the line when a copyright and license is not present in all source files
   #set(ament_cmake_copyright_FOUND TRUE)
   # the following line skips cpplint (only works in a git repo)
-  # uncomment the line when this package is not in a git repo
+  # uncomment tshe line when this package is not in a git repo
   #set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
