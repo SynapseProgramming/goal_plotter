@@ -10,6 +10,7 @@
 
 #define be RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT
 
+using namespace std::chrono_literals;
 
 class plot : public rclcpp::Node
 {
@@ -20,11 +21,6 @@ public:
 
     sub_goal_client= this->create_client<goal_plotter::srv::Sgoal>("get_curr_goal");
   }
-
-  // this function returns a shared_ptr which points to the current instant.
-   std::shared_ptr<plot> shared_plot_from_this(){
-     return std::static_pointer_cast<plot>((shared_from_this()));
-   }
 
     void main_menu(){
       std::string input;
@@ -41,16 +37,40 @@ public:
          main_menu();
         }
       }
+
+      // this function returns a shared_ptr which points to the current instant.
+       std::shared_ptr<plot> shared_plot_from_this(){
+         return std::static_pointer_cast<plot>((shared_from_this()));
+       }
+
     // This function would add a new goal into the map. With a custom goal_name
     void new_goal(){
       std::cout<<"Please enter a name for your goal.\n";
       std::string goal_name;
       std::cin>>goal_name;
       if(wait_confirmation()){
-       //TODO: when the user confirms that he wants this goal location,  call the service which
-       // gets the current selected goal value and stores it inside a map.
-       std::shared_ptr<plot> current_node_ptr= shared_plot_from_this();
-       std::cout<<"this is the current number of active shared_ptr "<<current_node_ptr.use_count()<<"\n";
+           std::shared_ptr<plot> current_node_ptr= shared_plot_from_this();
+           auto request = std::make_shared<goal_plotter::srv::Sgoal::Request>();
+           request->data=false;
+          //wait for the server to be up
+          while (!sub_goal_client->wait_for_service(1s)) {
+                if (!rclcpp::ok()) {
+                  RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
+                }
+                RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "get_goal, waiting again...");
+          }
+            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "get_goal has started");
+
+          auto result = sub_goal_client->async_send_request(request);
+          // Wait for the result.
+            if (rclcpp::spin_until_future_complete(current_node_ptr, result) ==
+              rclcpp::FutureReturnCode::SUCCESS)
+            {     //TODO: store the goal location in the map.
+                   RCLCPP_INFO(rclcpp::get_logger("rclcpp"),"[goal_plotter] Received goal values: x: %f y: %f z: %f w: %f",result.get()->x,result.get()->y,result.get()->z,result.get()->w);
+            } else {
+              RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to call service add_two_ints");
+            }
+
 
       }
       else main_menu();
@@ -67,6 +87,7 @@ public:
 private:
   std::map<std::string,goal_plotter::goal> goal_map;
   rclcpp::Client<goal_plotter::srv::Sgoal>::SharedPtr sub_goal_client;
+  goal_plotter::goal selected_goal;
 };
 
 int main(int argc, char * argv[])
