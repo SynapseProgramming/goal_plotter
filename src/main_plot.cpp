@@ -33,6 +33,8 @@ class plot : public rclcpp::Node {
       new_goal();
     } else if (input == "ls")
       list_goals();
+    else if (input == "rm")
+      remove_goal();
     else {
       std::cout << "Please re-enter one of the aforementioned acronyms.\n";
       main_menu();
@@ -42,6 +44,23 @@ class plot : public rclcpp::Node {
   // this function returns a shared_ptr which points to the current instant.
   std::shared_ptr<plot> shared_plot_from_this() {
     return std::static_pointer_cast<plot>((shared_from_this()));
+  }
+
+  // this function would remove a specific goal from goal_map
+  void remove_goal() {
+    std::cout << "Enter name of goal to remove.\n";
+    std::string goal_name;
+    std::cin >> goal_name;
+    if (goal_map.count(goal_name)) {
+      std::cout << goal_name << " found. Do you wish to remove this goal?\n";
+      if (wait_confirmation()) {
+        goal_map.erase(goal_name);
+        std::cout << "successfully erased: " << goal_name << "\n";
+      }
+    } else
+      std::cout << "Goal not found.\n";
+
+    main_menu();
   }
   // list_goals would print out all of the stored goals in goal_map
   void list_goals() {
