@@ -4,7 +4,7 @@
 #include <string>
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
-#include "goal_plotter/goal.h"
+#include "goal_plotter/goal.hpp"
 #include "goal_plotter/srv/sgoal.hpp"
 #include "rclcpp/rclcpp.hpp"
 
