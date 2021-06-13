@@ -31,7 +31,9 @@ class plot : public rclcpp::Node {
     std::cin >> input;
     if (input == "ag") {
       new_goal();
-    } else {
+    } else if (input == "ls")
+      list_goals();
+    else {
       std::cout << "Please re-enter one of the aforementioned acronyms.\n";
       main_menu();
     }
@@ -40,6 +42,18 @@ class plot : public rclcpp::Node {
   // this function returns a shared_ptr which points to the current instant.
   std::shared_ptr<plot> shared_plot_from_this() {
     return std::static_pointer_cast<plot>((shared_from_this()));
+  }
+  // list_goals would print out all of the stored goals in goal_map
+  void list_goals() {
+    if (goal_map.size() == 0)
+      std::cout << "No goals available.\n";
+    else {
+      for (auto it = goal_map.begin(); it != goal_map.end(); it++) {
+        std::cout << it->first << " x:" << it->second.x << " y:" << it->second.y
+                  << " z:" << it->second.z << " w:" << it->second.w << "\n";
+      }
+    }
+    main_menu();
   }
 
   // This function would add a new goal into the map. With a custom goal_name
