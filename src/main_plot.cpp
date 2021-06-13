@@ -47,6 +47,7 @@ class plot : public rclcpp::Node {
     std::cout << "Please enter a name for your goal.\n";
     std::string goal_name;
     std::cin >> goal_name;
+    std::cout << "To confirm goal:\n";
     if (wait_confirmation()) {
       std::shared_ptr<plot> current_node_ptr = shared_plot_from_this();
       auto request = std::make_shared<goal_plotter::srv::Sgoal::Request>();
@@ -64,20 +65,27 @@ class plot : public rclcpp::Node {
       auto result = sub_goal_client->async_send_request(request);
       // Wait for the result.
       if (rclcpp::spin_until_future_complete(current_node_ptr, result) ==
-          rclcpp::FutureReturnCode::SUCCESS) {  // TODO: store the goal location
-                                                // in the map.
+          rclcpp::FutureReturnCode::SUCCESS) {
         RCLCPP_INFO(
             rclcpp::get_logger("rclcpp"),
             "[goal_plotter] Received goal values: x: %f y: %f z: %f w: %f",
             result.get()->x, result.get()->y, result.get()->z, result.get()->w);
+        // copy over the selected goal positions
+        selected_goal.x = result.get()->x;
+        selected_goal.y = result.get()->y;
+        selected_goal.z = result.get()->z;
+        selected_goal.w = result.get()->w;
+        goal_map[goal_name] = selected_goal;
+        main_menu();
+
       } else {
         RCLCPP_ERROR(rclcpp::get_logger("rclcpp"),
-                     "Failed to call service add_two_ints");
+                     "Failed to call service Goal not added to goal_map.");
+        main_menu();
       }
 
     } else
       main_menu();
-    // TODO: complete the new goal function
   }
   // the wait_confirmation function would prompt the user to enter (y\n).
   // Function returns true if (y) and false if (anything else if entered)
