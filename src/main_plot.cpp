@@ -40,6 +40,7 @@ class plot : public rclcpp::Node {
     std::cout << "(rm) Remove a specific goal\n";
     std::cout << "(ck) Check if a goal exists\n";
     std::cout << "(sv) Save and export goal file\n";
+    std::cout << "(md) Modify an existing goal\n";
 
     std::cin >> input;
     if (input == "ag") {
@@ -48,6 +49,8 @@ class plot : public rclcpp::Node {
       list_goals();
     } else if (input == "rm") {
       remove_goal();
+    } else if (input == "md") {
+      modify_goal();
     } else {
       std::cout << "Please re-enter one of the aforementioned acronyms.\n";
       main_menu();
@@ -57,6 +60,23 @@ class plot : public rclcpp::Node {
   // this function returns a shared_ptr which points to the current instant.
   std::shared_ptr<plot> shared_plot_from_this() {
     return std::static_pointer_cast<plot>((shared_from_this()));
+  }
+  // this function allows the user to modify and exising goal
+  void modify_goal() {
+    std::cout << "Enter name of goal to modify.\n";
+    /*
+    std::string goal_name;
+    std::cin >> goal_name;
+    if (goal_map.count(goal_name)) {
+      std::cout << goal_name
+                << " found. Please select a new pose.\n To confirm: ";
+      if (wait_confirmation()) {
+      }
+    } else {
+      std::cout << "Goal not found.\n";
+    }
+    main_menu();
+    */
   }
 
   // this function would remove a specific goal from goal_map
@@ -92,7 +112,42 @@ class plot : public rclcpp::Node {
     }
     main_menu();
   }
+  // TODO: create a new function for just updating selected_goal
+  void update_selected_goal() {
+    std::shared_ptr<plot> current_node_ptr = shared_plot_from_this();
+    auto request = std::make_shared<goal_plotter::srv::Sgoal::Request>();
+    request->data = false;
+    // wait for the server to be up
+    while (!sub_goal_client->wait_for_service(1s)) {
+      if (!rclcpp::ok()) {
+        // TODO: ADD function in there which fixes never ending loop when
+        // the code is pre-empted while waiting for the get goal service to
+        // start
+        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"),
+                     "Interrupted while waiting for the service. Exiting.");
+      }
+      RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "get_goal, waiting again...");
+    }
+    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "get_goal has started");
 
+    auto result = sub_goal_client->async_send_request(request);
+    // Wait for the result.
+    if (rclcpp::spin_until_future_complete(current_node_ptr, result) ==
+        rclcpp::FutureReturnCode::SUCCESS) {
+      RCLCPP_INFO(
+          rclcpp::get_logger("rclcpp"),
+          "[goal_plotter] Received goal values: x: %f y: %f z: %f w: %f",
+          result.get()->x, result.get()->y, result.get()->z, result.get()->w);
+      // copy over the selected goal positions
+      selected_goal.x = result.get()->x;
+      selected_goal.y = result.get()->y;
+      selected_goal.z = result.get()->z;
+      selected_goal.w = result.get()->w;
+    } else {
+      RCLCPP_ERROR(rclcpp::get_logger("rclcpp"),
+                   "Failed to call service Goal not added to goal_map.");
+    }
+  }
   // This function would add a new goal into the map. With a custom goal_name
   void new_goal() {
     std::cout << "Please enter a name for your goal.\n";
@@ -100,56 +155,25 @@ class plot : public rclcpp::Node {
     std::cin >> goal_name;
     std::cout << "To confirm goal:\n";
     if (wait_confirmation()) {
-      std::shared_ptr<plot> current_node_ptr = shared_plot_from_this();
-      auto request = std::make_shared<goal_plotter::srv::Sgoal::Request>();
-      request->data = false;
-      // wait for the server to be up
-      while (!sub_goal_client->wait_for_service(1s)) {
-        if (!rclcpp::ok()) {
-          // TODO: ADD function in there which fixes never ending loop when the
-          // code is pre-empted while waiting for the get goal service to start
-          RCLCPP_ERROR(rclcpp::get_logger("rclcpp"),
-                       "Interrupted while waiting for the service. Exiting.");
-        }
-        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "get_goal, waiting again...");
-      }
-      RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "get_goal has started");
-
-      auto result = sub_goal_client->async_send_request(request);
-      // Wait for the result.
-      if (rclcpp::spin_until_future_complete(current_node_ptr, result) ==
-          rclcpp::FutureReturnCode::SUCCESS) {
-        RCLCPP_INFO(
-            rclcpp::get_logger("rclcpp"),
-            "[goal_plotter] Received goal values: x: %f y: %f z: %f w: %f",
-            result.get()->x, result.get()->y, result.get()->z, result.get()->w);
-        // copy over the selected goal positions
-        selected_goal.x = result.get()->x;
-        selected_goal.y = result.get()->y;
-        selected_goal.z = result.get()->z;
-        selected_goal.w = result.get()->w;
-        goal_map[goal_name] = selected_goal;
-        // have intervals of 3. aka m1 = 0, m2=3, m3=6 ...
-        marker_map[goal_name] = goal_id;
-        add_single_marker(visualization_msgs::msg::Marker::ADD, selected_goal,
-                          goal_id, goal_name);
-        goal_id += 3;
-        main_menu();
-
-      } else {
-        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"),
-                     "Failed to call service Goal not added to goal_map.");
-        main_menu();
-      }
-
-    } else
+      update_selected_goal();
+      // have intervals of 3. aka m1 = 0, m2=3, m3=6 ...
+      // update all maps
+      goal_map[goal_name] = selected_goal;
+      marker_map[goal_name] = goal_id;
+      add_single_marker(visualization_msgs::msg::Marker::ADD, selected_goal,
+                        goal_id, goal_name);
+      goal_id += 3;
       main_menu();
+
+    } else {
+      main_menu();
+    }
   }
   // the wait_confirmation function would prompt the user to enter (y\n).
   // Function returns true if (y) and false if (anything else if entered)
   bool wait_confirmation() {
-    std::cout
-        << "Please enter (y) for yes. Press and enter anything else for no.\n";
+    std::cout << "Please enter (y) for yes. Press and enter anything else "
+                 "for no.\n";
     std::string input;
     std::cin >> input;
     return input == "y" ? true : false;
