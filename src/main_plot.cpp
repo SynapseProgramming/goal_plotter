@@ -66,6 +66,7 @@ class plot : public rclcpp::Node {
       std::cout << goal_name << " found. Do you wish to remove this goal?\n";
       if (wait_confirmation()) {
         goal_map.erase(goal_name);
+        marker_map.erase(goal_name);
         std::cout << "successfully erased: " << goal_name << "\n";
       }
     } else
@@ -80,7 +81,9 @@ class plot : public rclcpp::Node {
     else {
       for (auto it = goal_map.begin(); it != goal_map.end(); it++) {
         std::cout << it->first << " x:" << it->second.x << " y:" << it->second.y
-                  << " z:" << it->second.z << " w:" << it->second.w << "\n";
+                  << " z:" << it->second.z << " w:" << it->second.w << " "
+                  << marker_map[it->first] << "\n";
+        ;
       }
     }
     main_menu();
@@ -122,6 +125,10 @@ class plot : public rclcpp::Node {
         selected_goal.z = result.get()->z;
         selected_goal.w = result.get()->w;
         goal_map[goal_name] = selected_goal;
+        // TODO: add in a map to store the marker_id of the goal. The marker ID
+        // have intervals of 3. aka m1 = 0, m2=3, m3=6 ...
+        marker_map[goal_name] = goal_id;
+        goal_id += 3;
         main_menu();
 
       } else {
@@ -145,8 +152,11 @@ class plot : public rclcpp::Node {
 
  private:
   std::map<std::string, goal_plotter::goal> goal_map;
+  std::map<std::string, int> marker_map;
+
   rclcpp::Client<goal_plotter::srv::Sgoal>::SharedPtr sub_goal_client;
   goal_plotter::goal selected_goal;
+  int goal_id = 0;
 };
 
 // Class only to be used for testing.
@@ -255,7 +265,6 @@ class place_marker : public rclcpp::Node {
     single_text.color.r = 0.0;
     single_text.color.g = 255.0;
     single_text.color.b = 0.0;
-    // TODO: add text into function parameter as well
     single_text.text = marker_name;
 
     // add single marker element into the marker array
@@ -274,14 +283,13 @@ int main(int argc, char* argv[]) {
   rclcpp::init(argc, argv);
   rclcpp::executors::MultiThreadedExecutor executor;
 
-  // std::shared_ptr<plot> plot_ptr = std::make_shared<plot>();
-  std::shared_ptr<place_marker> place_marker_ptr =
-      std::make_shared<place_marker>();
-
-  // executor.add_node(plot_ptr);
-  executor.add_node(place_marker_ptr);
-  place_marker_ptr->menu();
-  // plot_ptr->main_menu();
+  std::shared_ptr<plot> plot_ptr = std::make_shared<plot>();
+  // std::shared_ptr<place_marker> place_marker_ptr =
+  //  std::make_shared<place_marker>();
+  plot_ptr->main_menu();
+  executor.add_node(plot_ptr);
+  // executor.add_node(place_marker_ptr);
+  // place_marker_ptr->menu();
 
   executor.spin();
   rclcpp::shutdown();
