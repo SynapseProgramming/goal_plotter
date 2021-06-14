@@ -149,31 +149,72 @@ class plot : public rclcpp::Node {
   goal_plotter::goal selected_goal;
 };
 
+// Class only to be used for testing.
 class place_marker : public rclcpp::Node {
  public:
-  place_marker() : Node("place_marker_node") {}
+  place_marker() : Node("place_marker_node") {
+    marker_array_pub =
+        this->create_publisher<visualization_msgs::msg::MarkerArray>(
+            "/selected_goals", 10);
+  }
 
-  void print_thread_id() {
-    std::cout << "Place marker node Thread number: " << string_thread_id()
-              << "\n";
+  void menu() {
+    std::cout << "1.) place a single arrow.\n2.) delete a single arrow.\n";
+    std::string inp;
+    std::cin >> inp;
+    if (inp == "1") place_single_marker();
+    if (rclcpp::ok()) {
+      menu();
+    }
+  }
+  void place_single_marker() {
+    auto single_marker_array = visualization_msgs::msg::MarkerArray();
+    auto single_marker_element = visualization_msgs::msg::Marker();
+
+    // fill up the single marker element
+
+    // get current time and fill up the header
+    rclcpp::Time time_now = rclcpp::Clock().now();
+    single_marker_element.header.stamp = time_now;
+    single_marker_element.header.frame_id = "map";
+    // 0 for arrow
+    single_marker_element.id = 0;
+    single_marker_element.type = visualization_msgs::msg::Marker::ARROW;
+    single_marker_element.action = visualization_msgs::msg::Marker::ADD;
+    single_marker_element.pose.position.x = 1;
+    single_marker_element.pose.position.y = 1;
+    single_marker_element.pose.position.z = 0;
+    single_marker_element.pose.orientation.w = 1;
+    single_marker_element.scale.x = 1;
+    single_marker_element.scale.y = 0.1;
+    single_marker_element.scale.z = 0.1;
+    single_marker_element.color.a = 1.0;
+    single_marker_element.color.r = 0.0;
+    single_marker_element.color.g = 10.0;
+    single_marker_element.color.b = 0.0;
+
+    // add single marker element into the marker array
+    single_marker_array.markers.push_back(single_marker_element);
+    marker_array_pub->publish(single_marker_array);
   }
 
  private:
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr
+      marker_array_pub;
 };
 
 int main(int argc, char* argv[]) {
   rclcpp::init(argc, argv);
   rclcpp::executors::MultiThreadedExecutor executor;
 
-  std::shared_ptr<plot> plot_ptr = std::make_shared<plot>();
+  // std::shared_ptr<plot> plot_ptr = std::make_shared<plot>();
   std::shared_ptr<place_marker> place_marker_ptr =
       std::make_shared<place_marker>();
 
-  executor.add_node(plot_ptr);
+  // executor.add_node(plot_ptr);
   executor.add_node(place_marker_ptr);
-
-  place_marker_ptr->print_thread_id();
-  plot_ptr->main_menu();
+  place_marker_ptr->menu();
+  // plot_ptr->main_menu();
 
   executor.spin();
   rclcpp::shutdown();
