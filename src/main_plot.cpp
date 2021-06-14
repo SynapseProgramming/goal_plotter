@@ -107,8 +107,8 @@ class plot : public rclcpp::Node {
     else {
       for (auto it = goal_map.begin(); it != goal_map.end(); it++) {
         std::cout << it->first << " x:" << it->second.x << " y:" << it->second.y
-                  << " z:" << it->second.z << " w:" << it->second.w << " "
-                  << marker_map[it->first] << "\n";
+                  << " z:" << it->second.z << " w:" << it->second.w
+                  << " id:" << marker_map[it->first] << "\n";
         ;
       }
     }
@@ -242,9 +242,9 @@ class plot : public rclcpp::Node {
     single_text.pose.position.z = 0;
     single_text.pose.orientation.z = pose.z;
     single_text.pose.orientation.w = pose.w;
-    single_text.scale.x = 0.1;
-    single_text.scale.y = 0.1;
-    single_text.scale.z = 0.1;
+    single_text.scale.x = 0.25;
+    single_text.scale.y = 0.25;
+    single_text.scale.z = 0.25;
     single_text.color.a = 1.0;
     single_text.color.r = 0.0;
     single_text.color.g = 255.0;
