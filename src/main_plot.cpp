@@ -162,11 +162,45 @@ class place_marker : public rclcpp::Node {
     std::cout << "1.) place a single arrow.\n2.) delete a single arrow.\n";
     std::string inp;
     std::cin >> inp;
-    if (inp == "1") place_single_marker();
+    if (inp == "1")
+      place_single_marker();
+    else if (inp == "2")
+      remove_single_marker();
     if (rclcpp::ok()) {
       menu();
     }
   }
+  void remove_single_marker() {
+    auto single_marker_array = visualization_msgs::msg::MarkerArray();
+    auto single_marker_element = visualization_msgs::msg::Marker();
+
+    // fill up the single marker element
+
+    // get current time and fill up the header
+    rclcpp::Time time_now = rclcpp::Clock().now();
+    single_marker_element.header.stamp = time_now;
+    single_marker_element.header.frame_id = "map";
+    // 0 for arrow
+    single_marker_element.id = 0;
+    single_marker_element.type = visualization_msgs::msg::Marker::ARROW;
+    single_marker_element.action = visualization_msgs::msg::Marker::DELETE;
+    single_marker_element.pose.position.x = 1;
+    single_marker_element.pose.position.y = 1;
+    single_marker_element.pose.position.z = 0;
+    single_marker_element.pose.orientation.w = 1;
+    single_marker_element.scale.x = 1;
+    single_marker_element.scale.y = 0.1;
+    single_marker_element.scale.z = 0.1;
+    single_marker_element.color.a = 1.0;
+    single_marker_element.color.r = 0.0;
+    single_marker_element.color.g = 10.0;
+    single_marker_element.color.b = 0.0;
+
+    // add single marker element into the marker array
+    single_marker_array.markers.push_back(single_marker_element);
+    marker_array_pub->publish(single_marker_array);
+  }
+
   void place_single_marker() {
     auto single_marker_array = visualization_msgs::msg::MarkerArray();
     auto single_marker_element = visualization_msgs::msg::Marker();
