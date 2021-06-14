@@ -167,12 +167,19 @@ class place_marker : public rclcpp::Node {
     fake_pose.y = 2;
     fake_pose.z = 0;
     fake_pose.w = 1;
+    int index;
 
-    if (inp == "1")
-      modify_single_marker(visualization_msgs::msg::Marker::ADD, fake_pose, 0);
-    else if (inp == "2")
+    if (inp == "1") {
+      std::cin >> fake_pose.x >> fake_pose.y >> fake_pose.z >> fake_pose.w >>
+          index;
+      modify_single_marker(visualization_msgs::msg::Marker::ADD, fake_pose,
+                           index);
+
+    } else if (inp == "2") {
+      std::cin >> index;
       modify_single_marker(visualization_msgs::msg::Marker::DELETE, fake_pose,
-                           0);
+                           index);
+    }
     marker_array_pub->publish(marker_array);
 
     if (rclcpp::ok()) {
