@@ -166,6 +166,8 @@ class plot : public rclcpp::Node {
   }
   // This function would add a new goal into the map. With a custom goal_name
   void new_goal() {
+    // TODO: add in a check which warns the user if the goal entered has the
+    // same name as an existing goal
     std::cout << "Please enter a name for your goal.\n";
     std::string goal_name;
     std::cin >> goal_name;
