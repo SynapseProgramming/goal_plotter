@@ -51,6 +51,8 @@ class plot : public rclcpp::Node {
       remove_goal();
     } else if (input == "md") {
       modify_goal();
+    } else if (input == "ck") {
+      check_goal();
     } else {
       std::cout << "Please re-enter one of the aforementioned acronyms.\n";
       main_menu();
@@ -61,6 +63,20 @@ class plot : public rclcpp::Node {
   std::shared_ptr<plot> shared_plot_from_this() {
     return std::static_pointer_cast<plot>((shared_from_this()));
   }
+
+  // This function would check if the specified goal exists.
+  void check_goal() {
+    std::cout << "Enter name of goal.\n";
+    std::string goal_name;
+    std::cin >> goal_name;
+    if (goal_map.count(goal_name)) {
+      std::cout << goal_name << " exists!\n";
+    } else {
+      std::cout << goal_name << " does not exist!\n";
+    }
+    main_menu();
+  }
+
   // this function allows the user to modify and exising goal
   void modify_goal() {
     std::cout << "Enter name of goal to modify.\n";
