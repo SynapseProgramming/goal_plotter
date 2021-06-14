@@ -8,10 +8,19 @@
 #include "goal_plotter/goal.hpp"
 #include "goal_plotter/srv/sgoal.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "visualization_msgs/msg/marker_array.hpp"
 
 #define be RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT
 
 using namespace std::chrono_literals;
+
+/**
+ * A small convenience function for converting a thread ID to a string
+ **/
+std::string string_thread_id() {
+  auto hashed = std::hash<std::thread::id>()(std::this_thread::get_id());
+  return std::to_string(hashed);
+}
 
 class plot : public rclcpp::Node {
  public:
@@ -40,6 +49,8 @@ class plot : public rclcpp::Node {
       main_menu();
     }
   }
+
+  // TODO: Add in another function which visualises the placed goals
 
   // this function returns a shared_ptr which points to the current instant.
   std::shared_ptr<plot> shared_plot_from_this() {
@@ -88,6 +99,8 @@ class plot : public rclcpp::Node {
       // wait for the server to be up
       while (!sub_goal_client->wait_for_service(1s)) {
         if (!rclcpp::ok()) {
+          // TODO: ADD function in there which fixes never ending loop when the
+          // code is pre-empted while waiting for the get goal service to start
           RCLCPP_ERROR(rclcpp::get_logger("rclcpp"),
                        "Interrupted while waiting for the service. Exiting.");
         }
@@ -136,11 +149,33 @@ class plot : public rclcpp::Node {
   goal_plotter::goal selected_goal;
 };
 
+class place_marker : public rclcpp::Node {
+ public:
+  place_marker() : Node("place_marker_node") {}
+
+  void print_thread_id() {
+    std::cout << "Place marker node Thread number: " << string_thread_id()
+              << "\n";
+  }
+
+ private:
+};
+
 int main(int argc, char* argv[]) {
   rclcpp::init(argc, argv);
-  std::shared_ptr<plot> node_ptr = std::make_shared<plot>();
-  node_ptr->main_menu();
-  rclcpp::spin(node_ptr);
+  rclcpp::executors::MultiThreadedExecutor executor;
+
+  std::shared_ptr<plot> plot_ptr = std::make_shared<plot>();
+  std::shared_ptr<place_marker> place_marker_ptr =
+      std::make_shared<place_marker>();
+
+  executor.add_node(plot_ptr);
+  executor.add_node(place_marker_ptr);
+
+  place_marker_ptr->print_thread_id();
+  plot_ptr->main_menu();
+
+  executor.spin();
   rclcpp::shutdown();
   return 0;
 }
