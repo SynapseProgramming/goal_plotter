@@ -121,11 +121,10 @@ class plot : public rclcpp::Node {
     // wait for the server to be up
     while (!sub_goal_client->wait_for_service(1s)) {
       if (!rclcpp::ok()) {
-        // TODO: ADD function in there which fixes never ending loop when
-        // the code is pre-empted while waiting for the get goal service to
-        // start
         RCLCPP_ERROR(rclcpp::get_logger("rclcpp"),
                      "Interrupted while waiting for the service. Exiting.");
+        rclcpp::shutdown();
+        break;
       }
       RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "get_goal, waiting again...");
     }
