@@ -162,32 +162,43 @@ class place_marker : public rclcpp::Node {
     std::cout << "1.) place a single arrow.\n2.) delete a single arrow.\n";
     std::string inp;
     std::cin >> inp;
+    goal_plotter::goal fake_pose;
+    fake_pose.x = 1;
+    fake_pose.y = 2;
+    fake_pose.z = 0;
+    fake_pose.w = 1;
+
     if (inp == "1")
-      place_single_marker();
+      modify_single_marker(visualization_msgs::msg::Marker::ADD, fake_pose, 0);
     else if (inp == "2")
-      remove_single_marker();
+      modify_single_marker(visualization_msgs::msg::Marker::DELETE, fake_pose,
+                           0);
+    marker_array_pub->publish(marker_array);
+
     if (rclcpp::ok()) {
       menu();
+    } else {
+      rclcpp::shutdown();
     }
   }
-  void remove_single_marker() {
-    auto single_marker_array = visualization_msgs::msg::MarkerArray();
-    auto single_marker_element = visualization_msgs::msg::Marker();
 
-    // fill up the single marker element
+  void modify_single_marker(uint8_t marker_action, goal_plotter::goal pose,
+                            int marker_id) {
+    auto single_marker_element = visualization_msgs::msg::Marker();
 
     // get current time and fill up the header
     rclcpp::Time time_now = rclcpp::Clock().now();
     single_marker_element.header.stamp = time_now;
     single_marker_element.header.frame_id = "map";
     // 0 for arrow
-    single_marker_element.id = 0;
+    single_marker_element.id = marker_id;
     single_marker_element.type = visualization_msgs::msg::Marker::ARROW;
-    single_marker_element.action = visualization_msgs::msg::Marker::DELETE;
-    single_marker_element.pose.position.x = 1;
-    single_marker_element.pose.position.y = 1;
+    single_marker_element.action = marker_action;
+    single_marker_element.pose.position.x = pose.x;
+    single_marker_element.pose.position.y = pose.y;
     single_marker_element.pose.position.z = 0;
-    single_marker_element.pose.orientation.w = 1;
+    single_marker_element.pose.orientation.z = pose.z;
+    single_marker_element.pose.orientation.w = pose.w;
     single_marker_element.scale.x = 1;
     single_marker_element.scale.y = 0.1;
     single_marker_element.scale.z = 0.1;
@@ -197,44 +208,17 @@ class place_marker : public rclcpp::Node {
     single_marker_element.color.b = 0.0;
 
     // add single marker element into the marker array
-    single_marker_array.markers.push_back(single_marker_element);
-    marker_array_pub->publish(single_marker_array);
+    marker_array.markers.push_back(single_marker_element);
   }
 
-  void place_single_marker() {
-    auto single_marker_array = visualization_msgs::msg::MarkerArray();
-    auto single_marker_element = visualization_msgs::msg::Marker();
-
-    // fill up the single marker element
-
-    // get current time and fill up the header
-    rclcpp::Time time_now = rclcpp::Clock().now();
-    single_marker_element.header.stamp = time_now;
-    single_marker_element.header.frame_id = "map";
-    // 0 for arrow
-    single_marker_element.id = 0;
-    single_marker_element.type = visualization_msgs::msg::Marker::ARROW;
-    single_marker_element.action = visualization_msgs::msg::Marker::ADD;
-    single_marker_element.pose.position.x = 1;
-    single_marker_element.pose.position.y = 1;
-    single_marker_element.pose.position.z = 0;
-    single_marker_element.pose.orientation.w = 1;
-    single_marker_element.scale.x = 1;
-    single_marker_element.scale.y = 0.1;
-    single_marker_element.scale.z = 0.1;
-    single_marker_element.color.a = 1.0;
-    single_marker_element.color.r = 0.0;
-    single_marker_element.color.g = 10.0;
-    single_marker_element.color.b = 0.0;
-
-    // add single marker element into the marker array
-    single_marker_array.markers.push_back(single_marker_element);
-    marker_array_pub->publish(single_marker_array);
-  }
-
+  // TODO create a function which adds goal points into the marker array with a
+  // specific id, action. index etc.
  private:
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr
       marker_array_pub;
+
+  visualization_msgs::msg::MarkerArray_<std::allocator<void> > marker_array =
+      visualization_msgs::msg::MarkerArray();
 };
 
 int main(int argc, char* argv[]) {
