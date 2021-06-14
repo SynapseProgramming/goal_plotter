@@ -54,8 +54,6 @@ class plot : public rclcpp::Node {
     }
   }
 
-  // TODO: Add in another function which visualises the placed goals
-
   // this function returns a shared_ptr which points to the current instant.
   std::shared_ptr<plot> shared_plot_from_this() {
     return std::static_pointer_cast<plot>((shared_from_this()));
@@ -157,6 +155,8 @@ class plot : public rclcpp::Node {
     return input == "y" ? true : false;
   }
 
+  // add_single_marker function would place a marker on the map at the given
+  // pose
   void add_single_marker(uint8_t marker_action, goal_plotter::goal pose,
                          int marker_id, std::string marker_name) {
     auto single_arrow = visualization_msgs::msg::Marker();
@@ -246,137 +246,13 @@ class plot : public rclcpp::Node {
       visualization_msgs::msg::MarkerArray();
 };
 
-// Class only to be used for testing.
-class place_marker : public rclcpp::Node {
- public:
-  place_marker() : Node("place_marker_node") {
-    marker_array_pub =
-        this->create_publisher<visualization_msgs::msg::MarkerArray>(
-            "/selected_goals", 10);
-  }
-
-  void menu() {
-    std::cout << "1.) place a single arrow.\n2.) delete a single arrow.\n";
-    std::string inp;
-    std::cin >> inp;
-    goal_plotter::goal fake_pose;
-    fake_pose.x = 1;
-    fake_pose.y = 2;
-    fake_pose.z = 0;
-    fake_pose.w = 1;
-    int index;
-
-    if (inp == "1") {
-      std::cin >> fake_pose.x >> fake_pose.y >> fake_pose.z >> fake_pose.w >>
-          index;
-      add_single_marker(visualization_msgs::msg::Marker::ADD, fake_pose, index,
-                        "HEHE_FIRST_TEST");
-
-    } else if (inp == "2") {
-      std::cin >> index;
-      add_single_marker(visualization_msgs::msg::Marker::DELETE, fake_pose,
-                        index, "HEHE_FIRST_TEST");
-    }
-    marker_array_pub->publish(marker_array);
-
-    if (rclcpp::ok()) {
-      menu();
-    } else {
-      rclcpp::shutdown();
-    }
-  }
-  void add_single_marker(uint8_t marker_action, goal_plotter::goal pose,
-                         int marker_id, std::string marker_name) {
-    auto single_arrow = visualization_msgs::msg::Marker();
-    auto single_sphere = visualization_msgs::msg::Marker();
-    auto single_text = visualization_msgs::msg::Marker();
-    // get current time and fill up the header
-    rclcpp::Time time_now = rclcpp::Clock().now();
-
-    single_arrow.header.stamp = time_now;
-    single_arrow.header.frame_id = "map";
-    single_arrow.id = marker_id;
-    single_arrow.type = visualization_msgs::msg::Marker::ARROW;
-    single_arrow.action = marker_action;
-    single_arrow.pose.position.x = pose.x;
-    single_arrow.pose.position.y = pose.y;
-    single_arrow.pose.position.z = 0;
-    single_arrow.pose.orientation.z = pose.z;
-    single_arrow.pose.orientation.w = pose.w;
-    single_arrow.scale.x = 0.3;
-    single_arrow.scale.y = 0.05;
-    single_arrow.scale.z = 0.02;
-    single_arrow.color.a = 1.0;
-    single_arrow.color.r = 0.0;
-    single_arrow.color.g = 250.0;
-    single_arrow.color.b = 0.0;
-
-    // add single marker element into the marker array
-    marker_array.markers.push_back(single_arrow);
-
-    single_sphere.header.stamp = time_now;
-    single_sphere.header.frame_id = "map";
-    single_sphere.id = marker_id + 1;
-    single_sphere.type = visualization_msgs::msg::Marker::SPHERE;
-    single_sphere.action = marker_action;
-    single_sphere.pose.position.x = pose.x;
-    single_sphere.pose.position.y = pose.y;
-    single_sphere.pose.position.z = 0;
-    single_sphere.pose.orientation.z = pose.z;
-    single_sphere.pose.orientation.w = pose.w;
-    single_sphere.scale.x = 0.05;
-    single_sphere.scale.y = 0.05;
-    single_sphere.scale.z = 0.05;
-    single_sphere.color.a = 1.0;
-    single_sphere.color.r = 255.0;
-    single_sphere.color.g = 0.0;
-    single_sphere.color.b = 0.0;
-
-    // add single marker element into the marker array
-    marker_array.markers.push_back(single_sphere);
-
-    single_text.header.stamp = time_now;
-    single_text.header.frame_id = "map";
-    single_text.id = marker_id + 2;
-    single_text.type = visualization_msgs::msg::Marker::TEXT_VIEW_FACING;
-    single_text.action = marker_action;
-    single_text.pose.position.x = pose.x;
-    single_text.pose.position.y = pose.y;
-    single_text.pose.position.z = 0;
-    single_text.pose.orientation.z = pose.z;
-    single_text.pose.orientation.w = pose.w;
-    single_text.scale.x = 0.1;
-    single_text.scale.y = 0.1;
-    single_text.scale.z = 0.1;
-    single_text.color.a = 1.0;
-    single_text.color.r = 0.0;
-    single_text.color.g = 255.0;
-    single_text.color.b = 0.0;
-    single_text.text = marker_name;
-
-    // add single marker element into the marker array
-    marker_array.markers.push_back(single_text);
-  }
-
- private:
-  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr
-      marker_array_pub;
-
-  visualization_msgs::msg::MarkerArray_<std::allocator<void> > marker_array =
-      visualization_msgs::msg::MarkerArray();
-};
-
 int main(int argc, char* argv[]) {
   rclcpp::init(argc, argv);
   rclcpp::executors::MultiThreadedExecutor executor;
 
   std::shared_ptr<plot> plot_ptr = std::make_shared<plot>();
-  // std::shared_ptr<place_marker> place_marker_ptr =
-  //  std::make_shared<place_marker>();
   plot_ptr->main_menu();
   executor.add_node(plot_ptr);
-  // executor.add_node(place_marker_ptr);
-  // place_marker_ptr->menu();
 
   executor.spin();
   rclcpp::shutdown();
