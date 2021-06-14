@@ -172,13 +172,13 @@ class place_marker : public rclcpp::Node {
     if (inp == "1") {
       std::cin >> fake_pose.x >> fake_pose.y >> fake_pose.z >> fake_pose.w >>
           index;
-      modify_single_marker(visualization_msgs::msg::Marker::ADD, fake_pose,
-                           index);
+      add_single_marker(visualization_msgs::msg::Marker::ADD, fake_pose, index,
+                        "HEHE_FIRST_TEST");
 
     } else if (inp == "2") {
       std::cin >> index;
-      modify_single_marker(visualization_msgs::msg::Marker::DELETE, fake_pose,
-                           index);
+      add_single_marker(visualization_msgs::msg::Marker::DELETE, fake_pose,
+                        index, "HEHE_FIRST_TEST");
     }
     marker_array_pub->publish(marker_array);
 
@@ -188,38 +188,80 @@ class place_marker : public rclcpp::Node {
       rclcpp::shutdown();
     }
   }
-
-  void modify_single_marker(uint8_t marker_action, goal_plotter::goal pose,
-                            int marker_id) {
-    auto single_marker_element = visualization_msgs::msg::Marker();
-
+  void add_single_marker(uint8_t marker_action, goal_plotter::goal pose,
+                         int marker_id, std::string marker_name) {
+    auto single_arrow = visualization_msgs::msg::Marker();
+    auto single_sphere = visualization_msgs::msg::Marker();
+    auto single_text = visualization_msgs::msg::Marker();
     // get current time and fill up the header
     rclcpp::Time time_now = rclcpp::Clock().now();
-    single_marker_element.header.stamp = time_now;
-    single_marker_element.header.frame_id = "map";
-    // 0 for arrow
-    single_marker_element.id = marker_id;
-    single_marker_element.type = visualization_msgs::msg::Marker::ARROW;
-    single_marker_element.action = marker_action;
-    single_marker_element.pose.position.x = pose.x;
-    single_marker_element.pose.position.y = pose.y;
-    single_marker_element.pose.position.z = 0;
-    single_marker_element.pose.orientation.z = pose.z;
-    single_marker_element.pose.orientation.w = pose.w;
-    single_marker_element.scale.x = 1;
-    single_marker_element.scale.y = 0.1;
-    single_marker_element.scale.z = 0.1;
-    single_marker_element.color.a = 1.0;
-    single_marker_element.color.r = 0.0;
-    single_marker_element.color.g = 10.0;
-    single_marker_element.color.b = 0.0;
+
+    single_arrow.header.stamp = time_now;
+    single_arrow.header.frame_id = "map";
+    single_arrow.id = marker_id;
+    single_arrow.type = visualization_msgs::msg::Marker::ARROW;
+    single_arrow.action = marker_action;
+    single_arrow.pose.position.x = pose.x;
+    single_arrow.pose.position.y = pose.y;
+    single_arrow.pose.position.z = 0;
+    single_arrow.pose.orientation.z = pose.z;
+    single_arrow.pose.orientation.w = pose.w;
+    single_arrow.scale.x = 0.3;
+    single_arrow.scale.y = 0.05;
+    single_arrow.scale.z = 0.02;
+    single_arrow.color.a = 1.0;
+    single_arrow.color.r = 0.0;
+    single_arrow.color.g = 250.0;
+    single_arrow.color.b = 0.0;
 
     // add single marker element into the marker array
-    marker_array.markers.push_back(single_marker_element);
+    marker_array.markers.push_back(single_arrow);
+
+    single_sphere.header.stamp = time_now;
+    single_sphere.header.frame_id = "map";
+    single_sphere.id = marker_id + 1;
+    single_sphere.type = visualization_msgs::msg::Marker::SPHERE;
+    single_sphere.action = marker_action;
+    single_sphere.pose.position.x = pose.x;
+    single_sphere.pose.position.y = pose.y;
+    single_sphere.pose.position.z = 0;
+    single_sphere.pose.orientation.z = pose.z;
+    single_sphere.pose.orientation.w = pose.w;
+    single_sphere.scale.x = 0.05;
+    single_sphere.scale.y = 0.05;
+    single_sphere.scale.z = 0.05;
+    single_sphere.color.a = 1.0;
+    single_sphere.color.r = 255.0;
+    single_sphere.color.g = 0.0;
+    single_sphere.color.b = 0.0;
+
+    // add single marker element into the marker array
+    marker_array.markers.push_back(single_sphere);
+
+    single_text.header.stamp = time_now;
+    single_text.header.frame_id = "map";
+    single_text.id = marker_id + 2;
+    single_text.type = visualization_msgs::msg::Marker::TEXT_VIEW_FACING;
+    single_text.action = marker_action;
+    single_text.pose.position.x = pose.x;
+    single_text.pose.position.y = pose.y;
+    single_text.pose.position.z = 0;
+    single_text.pose.orientation.z = pose.z;
+    single_text.pose.orientation.w = pose.w;
+    single_text.scale.x = 0.1;
+    single_text.scale.y = 0.1;
+    single_text.scale.z = 0.1;
+    single_text.color.a = 1.0;
+    single_text.color.r = 0.0;
+    single_text.color.g = 255.0;
+    single_text.color.b = 0.0;
+    // TODO: add text into function parameter as well
+    single_text.text = marker_name;
+
+    // add single marker element into the marker array
+    marker_array.markers.push_back(single_text);
   }
 
-  // TODO create a function which adds goal points into the marker array with a
-  // specific id, action. index etc.
  private:
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr
       marker_array_pub;
