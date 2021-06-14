@@ -20,6 +20,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -31,7 +32,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
 #add executables
 add_executable(main_plot src/main_plot.cpp)
-ament_target_dependencies(main_plot rclcpp geometry_msgs)
+ament_target_dependencies(main_plot rclcpp geometry_msgs visualization_msgs)
 target_include_directories(main_plot
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
