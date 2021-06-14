@@ -64,19 +64,21 @@ class plot : public rclcpp::Node {
   // this function allows the user to modify and exising goal
   void modify_goal() {
     std::cout << "Enter name of goal to modify.\n";
-    /*
     std::string goal_name;
     std::cin >> goal_name;
     if (goal_map.count(goal_name)) {
       std::cout << goal_name
                 << " found. Please select a new pose.\n To confirm: ";
       if (wait_confirmation()) {
+        update_selected_goal();
+        goal_map[goal_name] = selected_goal;
+        add_single_marker(visualization_msgs::msg::Marker::ADD, selected_goal,
+                          marker_map[goal_name], goal_name);
       }
     } else {
       std::cout << "Goal not found.\n";
     }
     main_menu();
-    */
   }
 
   // this function would remove a specific goal from goal_map
@@ -112,7 +114,6 @@ class plot : public rclcpp::Node {
     }
     main_menu();
   }
-  // TODO: create a new function for just updating selected_goal
   void update_selected_goal() {
     std::shared_ptr<plot> current_node_ptr = shared_plot_from_this();
     auto request = std::make_shared<goal_plotter::srv::Sgoal::Request>();
