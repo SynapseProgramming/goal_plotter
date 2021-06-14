@@ -27,6 +27,10 @@ class plot : public rclcpp::Node {
   plot() : Node("goal_plotter") {
     sub_goal_client =
         this->create_client<goal_plotter::srv::Sgoal>("get_curr_goal");
+
+    marker_array_pub =
+        this->create_publisher<visualization_msgs::msg::MarkerArray>(
+            "/selected_goals", 10);
   }
 
   void main_menu() {
@@ -40,11 +44,11 @@ class plot : public rclcpp::Node {
     std::cin >> input;
     if (input == "ag") {
       new_goal();
-    } else if (input == "ls")
+    } else if (input == "ls") {
       list_goals();
-    else if (input == "rm")
+    } else if (input == "rm") {
       remove_goal();
-    else {
+    } else {
       std::cout << "Please re-enter one of the aforementioned acronyms.\n";
       main_menu();
     }
@@ -66,6 +70,8 @@ class plot : public rclcpp::Node {
       std::cout << goal_name << " found. Do you wish to remove this goal?\n";
       if (wait_confirmation()) {
         goal_map.erase(goal_name);
+        add_single_marker(visualization_msgs::msg::Marker::DELETE,
+                          selected_goal, marker_map[goal_name], goal_name);
         marker_map.erase(goal_name);
         std::cout << "successfully erased: " << goal_name << "\n";
       }
@@ -125,9 +131,10 @@ class plot : public rclcpp::Node {
         selected_goal.z = result.get()->z;
         selected_goal.w = result.get()->w;
         goal_map[goal_name] = selected_goal;
-        // TODO: add in a map to store the marker_id of the goal. The marker ID
         // have intervals of 3. aka m1 = 0, m2=3, m3=6 ...
         marker_map[goal_name] = goal_id;
+        add_single_marker(visualization_msgs::msg::Marker::ADD, selected_goal,
+                          goal_id, goal_name);
         goal_id += 3;
         main_menu();
 
@@ -150,6 +157,80 @@ class plot : public rclcpp::Node {
     return input == "y" ? true : false;
   }
 
+  void add_single_marker(uint8_t marker_action, goal_plotter::goal pose,
+                         int marker_id, std::string marker_name) {
+    auto single_arrow = visualization_msgs::msg::Marker();
+    auto single_sphere = visualization_msgs::msg::Marker();
+    auto single_text = visualization_msgs::msg::Marker();
+    // get current time and fill up the header
+    rclcpp::Time time_now = rclcpp::Clock().now();
+
+    single_arrow.header.stamp = time_now;
+    single_arrow.header.frame_id = "map";
+    single_arrow.id = marker_id;
+    single_arrow.type = visualization_msgs::msg::Marker::ARROW;
+    single_arrow.action = marker_action;
+    single_arrow.pose.position.x = pose.x;
+    single_arrow.pose.position.y = pose.y;
+    single_arrow.pose.position.z = 0;
+    single_arrow.pose.orientation.z = pose.z;
+    single_arrow.pose.orientation.w = pose.w;
+    single_arrow.scale.x = 0.3;
+    single_arrow.scale.y = 0.05;
+    single_arrow.scale.z = 0.02;
+    single_arrow.color.a = 1.0;
+    single_arrow.color.r = 0.0;
+    single_arrow.color.g = 250.0;
+    single_arrow.color.b = 0.0;
+
+    // add single marker element into the marker array
+    marker_array.markers.push_back(single_arrow);
+
+    single_sphere.header.stamp = time_now;
+    single_sphere.header.frame_id = "map";
+    single_sphere.id = marker_id + 1;
+    single_sphere.type = visualization_msgs::msg::Marker::SPHERE;
+    single_sphere.action = marker_action;
+    single_sphere.pose.position.x = pose.x;
+    single_sphere.pose.position.y = pose.y;
+    single_sphere.pose.position.z = 0;
+    single_sphere.pose.orientation.z = pose.z;
+    single_sphere.pose.orientation.w = pose.w;
+    single_sphere.scale.x = 0.05;
+    single_sphere.scale.y = 0.05;
+    single_sphere.scale.z = 0.05;
+    single_sphere.color.a = 1.0;
+    single_sphere.color.r = 255.0;
+    single_sphere.color.g = 0.0;
+    single_sphere.color.b = 0.0;
+
+    // add single marker element into the marker array
+    marker_array.markers.push_back(single_sphere);
+
+    single_text.header.stamp = time_now;
+    single_text.header.frame_id = "map";
+    single_text.id = marker_id + 2;
+    single_text.type = visualization_msgs::msg::Marker::TEXT_VIEW_FACING;
+    single_text.action = marker_action;
+    single_text.pose.position.x = pose.x;
+    single_text.pose.position.y = pose.y;
+    single_text.pose.position.z = 0;
+    single_text.pose.orientation.z = pose.z;
+    single_text.pose.orientation.w = pose.w;
+    single_text.scale.x = 0.1;
+    single_text.scale.y = 0.1;
+    single_text.scale.z = 0.1;
+    single_text.color.a = 1.0;
+    single_text.color.r = 0.0;
+    single_text.color.g = 255.0;
+    single_text.color.b = 0.0;
+    single_text.text = marker_name;
+
+    // add single marker element into the marker array
+    marker_array.markers.push_back(single_text);
+    marker_array_pub->publish(marker_array);
+  }
+
  private:
   std::map<std::string, goal_plotter::goal> goal_map;
   std::map<std::string, int> marker_map;
@@ -157,6 +238,12 @@ class plot : public rclcpp::Node {
   rclcpp::Client<goal_plotter::srv::Sgoal>::SharedPtr sub_goal_client;
   goal_plotter::goal selected_goal;
   int goal_id = 0;
+
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr
+      marker_array_pub;
+
+  visualization_msgs::msg::MarkerArray_<std::allocator<void> > marker_array =
+      visualization_msgs::msg::MarkerArray();
 };
 
 // Class only to be used for testing.
