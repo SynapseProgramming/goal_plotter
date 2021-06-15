@@ -55,15 +55,17 @@ int main() {
   pose.w = 4.0;
 
   std::string write_path =
-      "/home/ro/dev_ws/src/goal_plotter/goal_json/goal_test.json";
-
+      "/home/ro/dev_ws/install/goal_plotter/share/goal_plotter/goal_json/"
+      "goal_test_new_2.json";
+  // TODO: save the file to the shared folder to test if it would be overwritten
+  // when the user runs colcon build
   json_goal_writer test(write_path);
   if (test.begin_write()) {
     test.write_array("HEHE", pose);
-    pose.x = 10.0;
-    pose.y = 12.0;
-    pose.z = 13.0;
-    pose.w = 14.0;
+    pose.x = 100.0;
+    pose.y = 120.0;
+    pose.z = 130.0;
+    pose.w = 140.0;
     test.write_array("LOL", pose);
 
     test.stop_write();

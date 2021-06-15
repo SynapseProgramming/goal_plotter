@@ -114,7 +114,9 @@ class plot : public rclcpp::Node {
   void export_goal() {
     std::cout << "Do you want to export all goals to a json file?\n";
     if (wait_confirmation()) {
-      // TODO: add the goal path into a reconfigurable parameter in launch file
+      // TODO: add the goal path into a reconfigurable parameter in launch file.
+      // The install folder should be used for saving. the goal.
+
       goal_writer = new json_goal_writer(
           "/home/ro/dev_ws/src/goal_plotter/goal_json/goal_test.json");
 

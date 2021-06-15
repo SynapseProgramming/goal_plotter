@@ -8,6 +8,8 @@
 #include "rapidjson/reader.h"
 #include "rapidjson/stringbuffer.h"
 
+// TODO: create a class for the json file reader.
+
 int main() {
   rapidjson::Reader reader;
   // MyHandler handler;
