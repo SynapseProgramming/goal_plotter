@@ -49,6 +49,19 @@ target_include_directories(get_goal
 rosidl_target_interfaces(get_goal ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 
+add_executable(write_json tests/write_json.cpp)
+ament_target_dependencies(write_json rclcpp)
+target_include_directories(write_json
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+rosidl_target_interfaces(get_goal ${PROJECT_NAME} "rosidl_typesupport_cpp")
+
+
+
+
+
+
 
 install(
   DIRECTORY include/
@@ -67,6 +80,7 @@ install(
 install(TARGETS
   main_plot
   get_goal
+  write_json
   DESTINATION lib/${PROJECT_NAME})
 
 
