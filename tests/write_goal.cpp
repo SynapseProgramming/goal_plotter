@@ -54,8 +54,10 @@ int main() {
   pose.z = 3.0;
   pose.w = 4.0;
 
-  json_goal_writer test(
-      "/home/ro/dev_ws/src/goal_plotter/goal_json/goal_test.json");
+  std::string write_path =
+      "/home/ro/dev_ws/src/goal_plotter/goal_json/goal_test.json";
+
+  json_goal_writer test(write_path);
   if (test.begin_write()) {
     test.write_array("HEHE", pose);
     pose.x = 10.0;

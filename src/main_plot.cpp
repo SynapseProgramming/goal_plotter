@@ -110,7 +110,6 @@ class plot : public rclcpp::Node {
   std::shared_ptr<plot> shared_plot_from_this() {
     return std::static_pointer_cast<plot>((shared_from_this()));
   }
-  // TODO: test if the name of the file path can be stored in a string
   // This function would export all goals to a json file
   void export_goal() {
     std::cout << "Do you want to export all goals to a json file?\n";
