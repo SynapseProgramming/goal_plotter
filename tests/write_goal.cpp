@@ -23,7 +23,7 @@ int main() {
   // second goal
   writer.Key("second_goal");
   writer.StartArray();
-  double cnt_2 = 2.0;
+  double cnt_2 = 4.0;
   for (unsigned i = 0; i < 4; i++) {
     writer.Double(cnt_2);
     cnt_2 += 0.1;

@@ -55,7 +55,6 @@ target_include_directories(write_json
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
-rosidl_target_interfaces(get_goal ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 add_executable(write_goal tests/write_goal.cpp)
 ament_target_dependencies(write_goal rclcpp)
@@ -63,7 +62,14 @@ target_include_directories(write_goal
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
-rosidl_target_interfaces(get_goal ${PROJECT_NAME} "rosidl_typesupport_cpp")
+
+add_executable(read_goal tests/read_goal.cpp)
+ament_target_dependencies(read_goal rclcpp)
+target_include_directories(read_goal
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
 
 
 
@@ -88,6 +94,7 @@ install(
 install(TARGETS
   main_plot
   write_goal
+  read_goal
   get_goal
   write_json
   DESTINATION lib/${PROJECT_NAME})
