@@ -9,8 +9,6 @@
 #include "rapidjson/istreamwrapper.h"
 #include "rapidjson/stringbuffer.h"
 
-// TODO: create a class for the json file reader.
-
 class json_goal_reader {
  public:
   json_goal_reader(std::string full_filepath) {

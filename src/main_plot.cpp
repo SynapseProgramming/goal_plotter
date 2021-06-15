@@ -113,26 +113,22 @@ class plot : public rclcpp::Node {
   // This function would export all goals to a json file
   void export_goal() {
     std::cout << "Do you want to export all goals to a json file?\n";
-    if (wait_confirmation()) {
+    if (wait_confirmation() && goal_map.size() != 0) {
       // TODO: add the goal path into a reconfigurable parameter in launch file.
       // The install folder should be used for saving. the goal.
 
       goal_writer = new json_goal_writer(
           "/home/ro/dev_ws/src/goal_plotter/goal_json/goal_test.json");
-      // TODO: fix bug which allows user to write to file even though theres no
-      // elements in the goal map
+
       if (goal_writer->begin_write()) {
         // write all goals from map to the json file
-        if (goal_map.size() == 0) {
-          std::cout << "No goals available.\n";
-        } else {
-          for (auto it = goal_map.begin(); it != goal_map.end(); it++) {
-            goal_writer->write_array(it->first, it->second);
-          }
-          std::cout << "Successfully generated json file!\n";
-          goal_writer->stop_write();
-          delete goal_writer;
+        for (auto it = goal_map.begin(); it != goal_map.end(); it++) {
+          goal_writer->write_array(it->first, it->second);
         }
+        std::cout << "Successfully generated json file!\n";
+        goal_writer->stop_write();
+        delete goal_writer;
+
         main_menu();
       } else {
         std::cout
@@ -140,7 +136,8 @@ class plot : public rclcpp::Node {
         main_menu();
       }
     } else {
-      // user not willing to continue saving to file
+      std::cout << "User Cancelled or no goals to add!\n";
+      // user not willing to continue saving to file or there are no goals
       main_menu();
     }
   }
