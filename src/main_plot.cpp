@@ -78,7 +78,6 @@ class plot : public rclcpp::Node {
         this->create_publisher<visualization_msgs::msg::MarkerArray>(
             "/selected_goals", 10);
   }
-  // TODO: create a function which would save ane export the map to a json file.
   void main_menu() {
     std::string input;
     std::cout << "(ag) Add a new goal\n";
@@ -111,19 +110,22 @@ class plot : public rclcpp::Node {
   std::shared_ptr<plot> shared_plot_from_this() {
     return std::static_pointer_cast<plot>((shared_from_this()));
   }
+  // TODO: test if the name of the file path can be stored in a string
   // This function would export all goals to a json file
   void export_goal() {
     std::cout << "Do you want to export all goals to a json file?\n";
     if (wait_confirmation()) {
+      // TODO: add the goal path into a reconfigurable parameter in launch file
       goal_writer = new json_goal_writer(
           "/home/ro/dev_ws/src/goal_plotter/goal_json/goal_test.json");
+
       if (goal_writer->begin_write()) {
         // write all goals from map to the json file
         if (goal_map.size() == 0) {
           std::cout << "No goals available.\n";
         } else {
           for (auto it = goal_map.begin(); it != goal_map.end(); it++) {
-            goal_writer->write_array(it->first.c_str(), it->second);
+            goal_writer->write_array(it->first, it->second);
           }
           std::cout << "Successfully generated json file!\n";
           goal_writer->stop_write();
