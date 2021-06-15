@@ -119,7 +119,8 @@ class plot : public rclcpp::Node {
 
       goal_writer = new json_goal_writer(
           "/home/ro/dev_ws/src/goal_plotter/goal_json/goal_test.json");
-
+      // TODO: fix bug which allows user to write to file even though theres no
+      // elements in the goal map
       if (goal_writer->begin_write()) {
         // write all goals from map to the json file
         if (goal_map.size() == 0) {
