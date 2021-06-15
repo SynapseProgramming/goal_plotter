@@ -6,9 +6,6 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
-// TODO: create a class for writing the the json file.
-// The constructor should be the absolute filepath
-
 class json_goal_writer {
  public:
   json_goal_writer(std::string full_filepath) : writer(s) {
@@ -61,6 +58,12 @@ int main() {
       "/home/ro/dev_ws/src/goal_plotter/goal_json/goal_test.json");
   if (test.begin_write()) {
     test.write_array("HEHE", pose);
+    pose.x = 10.0;
+    pose.y = 12.0;
+    pose.z = 13.0;
+    pose.w = 14.0;
+    test.write_array("LOL", pose);
+
     test.stop_write();
   }
 
