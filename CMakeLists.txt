@@ -57,6 +57,13 @@ target_include_directories(write_json
     $<INSTALL_INTERFACE:include>)
 rosidl_target_interfaces(get_goal ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
+add_executable(write_goal tests/write_goal.cpp)
+ament_target_dependencies(write_goal rclcpp)
+target_include_directories(write_goal
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+rosidl_target_interfaces(get_goal ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 
 
@@ -71,6 +78,7 @@ install(
 install(
   DIRECTORY
   launch
+  goal_json
   rviz
   srv
   param
@@ -79,6 +87,7 @@ install(
 
 install(TARGETS
   main_plot
+  write_goal
   get_goal
   write_json
   DESTINATION lib/${PROJECT_NAME})
