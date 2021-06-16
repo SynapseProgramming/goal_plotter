@@ -12,6 +12,10 @@ from nav2_common.launch import RewrittenYaml
 def generate_launch_description():
 
     map_name = "dmro_lab_7jun.yaml"
+    # goal file to save goal poses to.
+    save_goal_file = "first_load_test.json"
+    # goal file to load poses from
+    load_goal_file = "first_load_test.json"
     autostart = True
     use_sim_time = False
 
@@ -23,6 +27,14 @@ def generate_launch_description():
     )
     rviz_config_dir = os.path.join(
         get_package_share_directory("goal_plotter"), "rviz", "default_plot.rviz"
+    )
+
+    save_file_path = os.path.join(
+        get_package_share_directory("goal_plotter"), "goal_json", save_goal_file
+    )
+
+    load_file_path = os.path.join(
+        get_package_share_directory("goal_plotter"), "goal_json", load_goal_file
     )
 
     param_substitutions = {"yaml_filename": map_yaml_file}
@@ -60,9 +72,30 @@ def generate_launch_description():
         output="screen",
     )
 
+    run_main_plot = Node(
+        package="goal_plotter",
+        executable="main_plot",
+        name="main_plot",
+        parameters=[
+            {"save_file_path": save_file_path},
+            {"load_file_path": load_file_path},
+        ],
+        prefix=["xterm -e gdb -ex run --args"],
+        output="screen",
+    )
+
+    run_get_goal = Node(
+        package="goal_plotter",
+        executable="get_goal",
+        name="get_goal",
+        output="screen",
+    )
+
     ld = LaunchDescription()
     ld.add_action(run_lifecycle_manager)
     ld.add_action(run_map_server)
     ld.add_action(run_rviz2)
+    ld.add_action(run_main_plot)
+    ld.add_action(run_get_goal)
 
     return ld

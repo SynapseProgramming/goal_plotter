@@ -1,4 +1,6 @@
 #include <chrono>
+#include <cstring>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -7,6 +9,11 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "goal_plotter/goal.hpp"
 #include "goal_plotter/srv/sgoal.hpp"
+#include "rapidjson/document.h"
+#include "rapidjson/istreamwrapper.h"
+#include "rapidjson/prettywriter.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
 #include "rclcpp/rclcpp.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
 
@@ -22,6 +29,84 @@ std::string string_thread_id() {
   return std::to_string(hashed);
 }
 
+class json_goal_reader {
+ public:
+  json_goal_reader(std::string full_filepath) {
+    full_filepath_ = full_filepath;
+  }
+
+  // read_json would convert the goals stored in the json file to a map.
+  std::map<std::string, goal_plotter::goal> read_json() {
+    std::map<std::string, goal_plotter::goal> obtained_goals;
+    std::ifstream read_file(full_filepath_);
+    if (read_file.is_open()) {
+      rapidjson::IStreamWrapper iswrap(read_file);
+      rapidjson::Document document;
+      document.ParseStream(iswrap);
+
+      // write the values to obtained_goals
+      for (rapidjson::Value::ConstMemberIterator itr = document.MemberBegin();
+           itr != document.MemberEnd(); ++itr) {
+        // main iterator loop to get the data out
+        std::string goal_name = itr->name.GetString();
+        goal_plotter::goal goal_pose;
+        goal_pose.x = itr->value[0].GetDouble();
+        goal_pose.y = itr->value[1].GetDouble();
+        goal_pose.z = itr->value[2].GetDouble();
+        goal_pose.w = itr->value[3].GetDouble();
+        obtained_goals[goal_name] = goal_pose;
+      }
+      return obtained_goals;
+    } else {
+      return obtained_goals;
+    }
+  }
+
+ private:
+  std::string full_filepath_;
+};
+
+class json_goal_writer {
+ public:
+  json_goal_writer(std::string full_filepath) : writer(s) {
+    full_filepath_ = full_filepath;
+  }
+  // this function would initialise the json_goal writer and open the file
+  // mentioned in the constructor
+  bool begin_write() {
+    write_file.open(full_filepath_);
+    if (write_file.is_open()) {
+      writer.StartObject();
+      return true;
+    } else {
+      return false;
+    }
+  }
+  // This function would write an array to the json writer
+  void write_array(std::string goal_name, goal_plotter::goal goal_pose) {
+    writer.Key(goal_name.c_str());
+    writer.StartArray();
+    // [0]x [1]y [2]z [3]w
+    writer.Double(goal_pose.x);
+    writer.Double(goal_pose.y);
+    writer.Double(goal_pose.z);
+    writer.Double(goal_pose.w);
+    writer.EndArray();
+  }
+  // this function would save the goal poses to the json file
+  void stop_write() {
+    writer.EndObject();
+    write_file << s.GetString();
+    write_file.close();
+  }
+
+ private:
+  std::ofstream write_file;
+  rapidjson::StringBuffer s;
+  rapidjson::PrettyWriter<rapidjson::StringBuffer> writer;
+  std::string full_filepath_;
+};
+
 class plot : public rclcpp::Node {
  public:
   plot() : Node("goal_plotter") {
@@ -31,15 +116,22 @@ class plot : public rclcpp::Node {
     marker_array_pub =
         this->create_publisher<visualization_msgs::msg::MarkerArray>(
             "/selected_goals", 10);
+    this->declare_parameter<std::string>("save_file_path", "nill");
+    this->declare_parameter<std::string>("load_file_path", "nill");
+    this->get_parameter("save_file_path", save_file_path);
+    this->get_parameter("load_file_path", load_file_path);
   }
-
+  void print_file_path() {
+    std::cout << "this is the load file path:  " << load_file_path << "\n";
+  }
   void main_menu() {
     std::string input;
     std::cout << "(ag) Add a new goal\n";
     std::cout << "(ls) List all goals\n";
     std::cout << "(rm) Remove a specific goal\n";
     std::cout << "(ck) Check if a goal exists\n";
-    std::cout << "(sv) Save and export goal file\n";
+    std::cout << "(sv) Save and export a goal file\n";
+    std::cout << "(op) Open and load a goal file.\n";
     std::cout << "(md) Modify an existing goal\n";
 
     std::cin >> input;
@@ -53,6 +145,10 @@ class plot : public rclcpp::Node {
       modify_goal();
     } else if (input == "ck") {
       check_goal();
+    } else if (input == "sv") {
+      export_goal();
+    } else if (input == "op") {
+      load_goal();
     } else {
       std::cout << "Please re-enter one of the aforementioned acronyms.\n";
       main_menu();
@@ -62,6 +158,77 @@ class plot : public rclcpp::Node {
   // this function returns a shared_ptr which points to the current instant.
   std::shared_ptr<plot> shared_plot_from_this() {
     return std::static_pointer_cast<plot>((shared_from_this()));
+  }
+
+  // This function would load goals from a goal file.
+  void load_goal() {
+    std::cout << "WARNING: loading goals from a goal file would overwrite your "
+                 "existing goals. Continue?\n";
+    if (wait_confirmation()) {
+      // do stuff
+      goal_reader = new json_goal_reader(load_file_path);
+      std::map<std::string, goal_plotter::goal> loaded_goals;
+      loaded_goals = goal_reader->read_json();
+      if (loaded_goals.size() != 0) {
+        // delete all existing markers
+        std::string fake_name = "nil";
+        for (auto it = marker_map.begin(); it != marker_map.end(); it++) {
+          add_single_marker(visualization_msgs::msg::Marker::DELETE,
+                            selected_goal, it->second, fake_name);
+        }
+        // reset goal id
+        goal_id = 0;
+        // clear the current maps
+        goal_map.clear();
+        marker_map.clear();
+        for (auto it = loaded_goals.begin(); it != loaded_goals.end(); it++) {
+          goal_plotter::goal new_goal_pose = it->second;
+          std::string new_goal_name = it->first;
+          goal_map[new_goal_name] = new_goal_pose;
+          marker_map[new_goal_name] = goal_id;
+
+          add_single_marker(visualization_msgs::msg::Marker::ADD, new_goal_pose,
+                            goal_id, new_goal_name);
+          goal_id += 3;
+        }
+        main_menu();
+      } else {
+        std::cout << "ERROR! Goals could not be loaded!\n";
+        main_menu();
+      }
+
+      delete goal_reader;
+    } else {
+      main_menu();
+    }
+  }
+
+  // This function would export all goals to a json file
+  void export_goal() {
+    std::cout << "Do you want to export all goals to a json file?\n";
+    if (wait_confirmation() && goal_map.size() != 0) {
+      goal_writer = new json_goal_writer(save_file_path);
+
+      if (goal_writer->begin_write()) {
+        // write all goals from map to the json file
+        for (auto it = goal_map.begin(); it != goal_map.end(); it++) {
+          goal_writer->write_array(it->first, it->second);
+        }
+        std::cout << "Successfully generated json file!\n";
+        goal_writer->stop_write();
+        delete goal_writer;
+
+        main_menu();
+      } else {
+        std::cout
+            << "Something went wrong! Unable to open specified json file!\n";
+        main_menu();
+      }
+    } else {
+      std::cout << "User Cancelled or no goals to add!\n";
+      // user not willing to continue saving to file or there are no goals
+      main_menu();
+    }
   }
 
   // This function would check if the specified goal exists.
@@ -118,9 +285,9 @@ class plot : public rclcpp::Node {
   }
   // list_goals would print out all of the stored goals in goal_map
   void list_goals() {
-    if (goal_map.size() == 0)
+    if (goal_map.size() == 0) {
       std::cout << "No goals available.\n";
-    else {
+    } else {
       for (auto it = goal_map.begin(); it != goal_map.end(); it++) {
         std::cout << it->first << " x:" << it->second.x << " y:" << it->second.y
                   << " z:" << it->second.z << " w:" << it->second.w
@@ -166,24 +333,27 @@ class plot : public rclcpp::Node {
   }
   // This function would add a new goal into the map. With a custom goal_name
   void new_goal() {
-    // TODO: add in a check which warns the user if the goal entered has the
-    // same name as an existing goal
     std::cout << "Please enter a name for your goal.\n";
     std::string goal_name;
     std::cin >> goal_name;
-    std::cout << "To confirm goal:\n";
-    if (wait_confirmation()) {
-      update_selected_goal();
-      // have intervals of 3. aka m1 = 0, m2=3, m3=6 ...
-      // update all maps
-      goal_map[goal_name] = selected_goal;
-      marker_map[goal_name] = goal_id;
-      add_single_marker(visualization_msgs::msg::Marker::ADD, selected_goal,
-                        goal_id, goal_name);
-      goal_id += 3;
-      main_menu();
+    if (goal_map.count(goal_name) == 0) {
+      std::cout << "To confirm goal:\n";
+      if (wait_confirmation()) {
+        update_selected_goal();
+        // have intervals of 3. aka m1 = 0, m2=3, m3=6 ...
+        // update all maps
+        goal_map[goal_name] = selected_goal;
+        marker_map[goal_name] = goal_id;
+        add_single_marker(visualization_msgs::msg::Marker::ADD, selected_goal,
+                          goal_id, goal_name);
+        goal_id += 3;
+        main_menu();
 
+      } else {
+        main_menu();
+      }
     } else {
+      std::cout << "Goal Already Exists!\n";
       main_menu();
     }
   }
@@ -279,6 +449,10 @@ class plot : public rclcpp::Node {
 
   rclcpp::Client<goal_plotter::srv::Sgoal>::SharedPtr sub_goal_client;
   goal_plotter::goal selected_goal;
+  json_goal_writer* goal_writer;
+  json_goal_reader* goal_reader;
+  std::string save_file_path;
+  std::string load_file_path;
   int goal_id = 0;
 
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr
@@ -293,6 +467,7 @@ int main(int argc, char* argv[]) {
   rclcpp::executors::MultiThreadedExecutor executor;
 
   std::shared_ptr<plot> plot_ptr = std::make_shared<plot>();
+  plot_ptr->print_file_path();
   plot_ptr->main_menu();
   executor.add_node(plot_ptr);
 

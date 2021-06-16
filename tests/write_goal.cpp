@@ -1,45 +1,75 @@
 #include <fstream>
 #include <iostream>
 
+#include "goal_plotter/goal.hpp"
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
-int main() {
-  std::ofstream write_file;
-  rapidjson::StringBuffer s;
-  rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(s);
-
-  writer.StartObject();
-  // first goal
-  writer.Key("first_goal");
-  writer.StartArray();
-  double cnt = 0;
-  for (unsigned i = 0; i < 4; i++) {
-    writer.Double(cnt);
-    cnt += 0.1;
+class json_goal_writer {
+ public:
+  json_goal_writer(std::string full_filepath) : writer(s) {
+    full_filepath_ = full_filepath;
   }
-  writer.EndArray();
-  // second goal
-  writer.Key("second_goal");
-  writer.StartArray();
-  double cnt_2 = 4.0;
-  for (unsigned i = 0; i < 4; i++) {
-    writer.Double(cnt_2);
-    cnt_2 += 0.1;
+  // this function would initialise the json_goal writer and open the file
+  // mentioned in the constructor
+  bool begin_write() {
+    write_file.open(full_filepath_);
+    if (write_file.is_open()) {
+      writer.StartObject();
+      return true;
+    } else {
+      return false;
+    }
   }
-  writer.EndArray();
-
-  writer.EndObject();
-  // writer.EndObject();
-  std::cout << s.GetString() << std::endl;
-
-  write_file.open("/home/ro/dev_ws/src/goal_plotter/goal_json/goal_test.json");
-  if (write_file.is_open()) {
+  // This function would write an array to the json writer
+  void write_array(std::string goal_name, goal_plotter::goal goal_pose) {
+    writer.Key(goal_name.c_str());
+    writer.StartArray();
+    // [0]x [1]y [2]z [3]w
+    writer.Double(goal_pose.x);
+    writer.Double(goal_pose.y);
+    writer.Double(goal_pose.z);
+    writer.Double(goal_pose.w);
+    writer.EndArray();
+  }
+  // this function would save the goal poses to the json file
+  void stop_write() {
+    writer.EndObject();
     write_file << s.GetString();
     write_file.close();
-  } else {
-    std::cout << "something went wrong. Unable to open file.\n";
   }
+
+ private:
+  std::ofstream write_file;
+  rapidjson::StringBuffer s;
+  rapidjson::PrettyWriter<rapidjson::StringBuffer> writer;
+  std::string full_filepath_;
+};
+
+int main() {
+  goal_plotter::goal pose;
+  pose.x = 1.0;
+  pose.y = 2.0;
+  pose.z = 3.0;
+  pose.w = 4.0;
+
+  std::string write_path =
+      "/home/ro/dev_ws/install/goal_plotter/share/goal_plotter/goal_json/"
+      "goal_test_new_2.json";
+  // TODO: save the file to the shared folder to test if it would be overwritten
+  // when the user runs colcon build
+  json_goal_writer test(write_path);
+  if (test.begin_write()) {
+    test.write_array("HEHE", pose);
+    pose.x = 100.0;
+    pose.y = 120.0;
+    pose.z = 130.0;
+    pose.w = 140.0;
+    test.write_array("LOL", pose);
+
+    test.stop_write();
+  }
+
   return 0;
 }
