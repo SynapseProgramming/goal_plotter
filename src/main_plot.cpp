@@ -106,7 +106,7 @@ class json_goal_writer {
   rapidjson::PrettyWriter<rapidjson::StringBuffer> writer;
   std::string full_filepath_;
 };
-// TODO: add in json reader program eventually
+
 class plot : public rclcpp::Node {
  public:
   plot() : Node("goal_plotter") {
@@ -181,8 +181,6 @@ class plot : public rclcpp::Node {
         // clear the current maps
         goal_map.clear();
         marker_map.clear();
-        // TODO: write the code which copies over the loaded goals into the main
-        // goal maps
         for (auto it = loaded_goals.begin(); it != loaded_goals.end(); it++) {
           goal_plotter::goal new_goal_pose = it->second;
           std::string new_goal_name = it->first;
@@ -192,11 +190,6 @@ class plot : public rclcpp::Node {
           add_single_marker(visualization_msgs::msg::Marker::ADD, new_goal_pose,
                             goal_id, new_goal_name);
           goal_id += 3;
-
-          //          std::cout << it->first << " " << it->second.x << " " <<
-          //          it->second.y
-          //                  << " " << it->second.z << " " << it->second.w <<
-          //                  "\n";
         }
         main_menu();
       } else {
