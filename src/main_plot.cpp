@@ -77,7 +77,10 @@ class plot : public rclcpp::Node {
     marker_array_pub =
         this->create_publisher<visualization_msgs::msg::MarkerArray>(
             "/selected_goals", 10);
+    this->declare_parameter<std::string>("save_file_path", "nill");
+    this->get_parameter("save_file_path", save_file_path);
   }
+  void print_file_path() { std::cout << save_file_path << "\n"; }
   void main_menu() {
     std::string input;
     std::cout << "(ag) Add a new goal\n";
@@ -117,8 +120,7 @@ class plot : public rclcpp::Node {
       // TODO: add the goal path into a reconfigurable parameter in launch file.
       // The install folder should be used for saving. the goal.
 
-      goal_writer = new json_goal_writer(
-          "/home/ro/dev_ws/src/goal_plotter/goal_json/goal_test.json");
+      goal_writer = new json_goal_writer(save_file_path);
 
       if (goal_writer->begin_write()) {
         // write all goals from map to the json file
@@ -358,6 +360,8 @@ class plot : public rclcpp::Node {
   rclcpp::Client<goal_plotter::srv::Sgoal>::SharedPtr sub_goal_client;
   goal_plotter::goal selected_goal;
   json_goal_writer* goal_writer;
+  std::string save_file_path;
+  std::string load_file_path;
   int goal_id = 0;
 
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr
@@ -372,6 +376,7 @@ int main(int argc, char* argv[]) {
   rclcpp::executors::MultiThreadedExecutor executor;
 
   std::shared_ptr<plot> plot_ptr = std::make_shared<plot>();
+  plot_ptr->print_file_path();
   plot_ptr->main_menu();
   executor.add_node(plot_ptr);
 
