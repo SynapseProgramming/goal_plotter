@@ -12,6 +12,9 @@ from nav2_common.launch import RewrittenYaml
 def generate_launch_description():
 
     map_name = "dmro_lab_7jun.yaml"
+    # goal file to save goal poses to.
+    save_goal_file = "first_load_test.json"
+    # goal file to load poses from
     load_goal_file = "first_load_test.json"
     autostart = True
     use_sim_time = False
@@ -27,6 +30,10 @@ def generate_launch_description():
     )
 
     save_file_path = os.path.join(
+        get_package_share_directory("goal_plotter"), "goal_json", save_goal_file
+    )
+
+    load_file_path = os.path.join(
         get_package_share_directory("goal_plotter"), "goal_json", load_goal_file
     )
 
@@ -69,7 +76,10 @@ def generate_launch_description():
         package="goal_plotter",
         executable="main_plot",
         name="main_plot",
-        parameters=[{"save_file_path": save_file_path}],
+        parameters=[
+            {"save_file_path": save_file_path},
+            {"load_file_path": load_file_path},
+        ],
         prefix=["xterm -e gdb -ex run --args"],
         output="screen",
     )

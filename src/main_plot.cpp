@@ -78,9 +78,13 @@ class plot : public rclcpp::Node {
         this->create_publisher<visualization_msgs::msg::MarkerArray>(
             "/selected_goals", 10);
     this->declare_parameter<std::string>("save_file_path", "nill");
+    this->declare_parameter<std::string>("load_file_path", "nill");
     this->get_parameter("save_file_path", save_file_path);
+    this->get_parameter("load_file_path", load_file_path);
   }
-  void print_file_path() { std::cout << save_file_path << "\n"; }
+  void print_file_path() {
+    std::cout << "this is the load file path:  " << load_file_path << "\n";
+  }
   void main_menu() {
     std::string input;
     std::cout << "(ag) Add a new goal\n";
