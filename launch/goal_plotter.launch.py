@@ -60,9 +60,20 @@ def generate_launch_description():
         output="screen",
     )
 
+    run_main_plot = Node(
+        package="goal_plotter",
+        executable="main_plot",
+        name="main_plot",
+        # parameters=[{"use_sim_time": use_sim_time}],
+        prefix=['xterm -e gdb -ex run --args'],
+        output="screen",
+
+    )
+
     ld = LaunchDescription()
     ld.add_action(run_lifecycle_manager)
     ld.add_action(run_map_server)
     ld.add_action(run_rviz2)
+    ld.add_action(run_main_plot)
 
     return ld

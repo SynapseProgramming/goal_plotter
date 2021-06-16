@@ -66,7 +66,7 @@ class json_goal_writer {
   rapidjson::PrettyWriter<rapidjson::StringBuffer> writer;
   std::string full_filepath_;
 };
-
+// TODO: add in json reader program eventually
 class plot : public rclcpp::Node {
  public:
   // TODO: add in parameters to change the file path
