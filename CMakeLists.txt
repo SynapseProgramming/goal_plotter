@@ -49,7 +49,6 @@ target_include_directories(get_goal
 rosidl_target_interfaces(get_goal ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 
-
 install(
   DIRECTORY include/
   DESTINATION include
@@ -58,6 +57,7 @@ install(
 install(
   DIRECTORY
   launch
+  goal_json
   rviz
   srv
   param
