@@ -117,9 +117,6 @@ class plot : public rclcpp::Node {
   void export_goal() {
     std::cout << "Do you want to export all goals to a json file?\n";
     if (wait_confirmation() && goal_map.size() != 0) {
-      // TODO: add the goal path into a reconfigurable parameter in launch file.
-      // The install folder should be used for saving. the goal.
-
       goal_writer = new json_goal_writer(save_file_path);
 
       if (goal_writer->begin_write()) {
@@ -246,24 +243,27 @@ class plot : public rclcpp::Node {
   }
   // This function would add a new goal into the map. With a custom goal_name
   void new_goal() {
-    // TODO: add in a check which warns the user if the goal entered has the
-    // same name as an existing goal
     std::cout << "Please enter a name for your goal.\n";
     std::string goal_name;
     std::cin >> goal_name;
-    std::cout << "To confirm goal:\n";
-    if (wait_confirmation()) {
-      update_selected_goal();
-      // have intervals of 3. aka m1 = 0, m2=3, m3=6 ...
-      // update all maps
-      goal_map[goal_name] = selected_goal;
-      marker_map[goal_name] = goal_id;
-      add_single_marker(visualization_msgs::msg::Marker::ADD, selected_goal,
-                        goal_id, goal_name);
-      goal_id += 3;
-      main_menu();
+    if (goal_map.count(goal_name) == 0) {
+      std::cout << "To confirm goal:\n";
+      if (wait_confirmation()) {
+        update_selected_goal();
+        // have intervals of 3. aka m1 = 0, m2=3, m3=6 ...
+        // update all maps
+        goal_map[goal_name] = selected_goal;
+        marker_map[goal_name] = goal_id;
+        add_single_marker(visualization_msgs::msg::Marker::ADD, selected_goal,
+                          goal_id, goal_name);
+        goal_id += 3;
+        main_menu();
 
+      } else {
+        main_menu();
+      }
     } else {
+      std::cout << "Goal Already Exists!\n";
       main_menu();
     }
   }
