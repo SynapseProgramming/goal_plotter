@@ -170,14 +170,35 @@ class plot : public rclcpp::Node {
       std::map<std::string, goal_plotter::goal> loaded_goals;
       loaded_goals = goal_reader->read_json();
       if (loaded_goals.size() != 0) {
-        // do stuff more here
-        // delete all of the current goals.
-        // firstly for testing we would just print out the values
-        for (auto it = loaded_goals.begin(); it != loaded_goals.end(); it++) {
-          std::cout << it->first << " " << it->second.x << " " << it->second.y
-                    << " " << it->second.z << " " << it->second.w << "\n";
+        // delete all existing markers
+        std::string fake_name = "nil";
+        for (auto it = marker_map.begin(); it != marker_map.end(); it++) {
+          add_single_marker(visualization_msgs::msg::Marker::DELETE,
+                            selected_goal, it->second, fake_name);
         }
+        // reset goal id
+        goal_id = 0;
+        // clear the current maps
+        goal_map.clear();
+        marker_map.clear();
+        // TODO: write the code which copies over the loaded goals into the main
+        // goal maps
+        for (auto it = loaded_goals.begin(); it != loaded_goals.end(); it++) {
+          goal_plotter::goal new_goal_pose = it->second;
+          std::string new_goal_name = it->first;
+          goal_map[new_goal_name] = new_goal_pose;
+          marker_map[new_goal_name] = goal_id;
 
+          add_single_marker(visualization_msgs::msg::Marker::ADD, new_goal_pose,
+                            goal_id, new_goal_name);
+          goal_id += 3;
+
+          //          std::cout << it->first << " " << it->second.x << " " <<
+          //          it->second.y
+          //                  << " " << it->second.z << " " << it->second.w <<
+          //                  "\n";
+        }
+        main_menu();
       } else {
         std::cout << "ERROR! Goals could not be loaded!\n";
         main_menu();
