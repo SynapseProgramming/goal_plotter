@@ -1,4 +1,5 @@
 #include <chrono>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -8,6 +9,8 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "goal_plotter/goal.hpp"
 #include "goal_plotter/srv/sgoal.hpp"
+#include "rapidjson/document.h"
+#include "rapidjson/istreamwrapper.h"
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
@@ -25,6 +28,43 @@ std::string string_thread_id() {
   auto hashed = std::hash<std::thread::id>()(std::this_thread::get_id());
   return std::to_string(hashed);
 }
+
+class json_goal_reader {
+ public:
+  json_goal_reader(std::string full_filepath) {
+    full_filepath_ = full_filepath;
+  }
+
+  // read_json would convert the goals stored in the json file to a map.
+  std::map<std::string, goal_plotter::goal> read_json() {
+    std::map<std::string, goal_plotter::goal> obtained_goals;
+    std::ifstream read_file(full_filepath_);
+    if (read_file.is_open()) {
+      rapidjson::IStreamWrapper iswrap(read_file);
+      rapidjson::Document document;
+      document.ParseStream(iswrap);
+
+      // write the values to obtained_goals
+      for (rapidjson::Value::ConstMemberIterator itr = document.MemberBegin();
+           itr != document.MemberEnd(); ++itr) {
+        // main iterator loop to get the data out
+        std::string goal_name = itr->name.GetString();
+        goal_plotter::goal goal_pose;
+        goal_pose.x = itr->value[0].GetDouble();
+        goal_pose.y = itr->value[1].GetDouble();
+        goal_pose.z = itr->value[2].GetDouble();
+        goal_pose.w = itr->value[3].GetDouble();
+        obtained_goals[goal_name] = goal_pose;
+      }
+      return obtained_goals;
+    } else {
+      return obtained_goals;
+    }
+  }
+
+ private:
+  std::string full_filepath_;
+};
 
 class json_goal_writer {
  public:
@@ -69,7 +109,6 @@ class json_goal_writer {
 // TODO: add in json reader program eventually
 class plot : public rclcpp::Node {
  public:
-  // TODO: add in parameters to change the file path
   plot() : Node("goal_plotter") {
     sub_goal_client =
         this->create_client<goal_plotter::srv::Sgoal>("get_curr_goal");
@@ -91,7 +130,8 @@ class plot : public rclcpp::Node {
     std::cout << "(ls) List all goals\n";
     std::cout << "(rm) Remove a specific goal\n";
     std::cout << "(ck) Check if a goal exists\n";
-    std::cout << "(sv) Save and export goal file\n";
+    std::cout << "(sv) Save and export a goal file\n";
+    std::cout << "(op) Open and load a goal file.\n";
     std::cout << "(md) Modify an existing goal\n";
 
     std::cin >> input;
@@ -107,6 +147,8 @@ class plot : public rclcpp::Node {
       check_goal();
     } else if (input == "sv") {
       export_goal();
+    } else if (input == "op") {
+      load_goal();
     } else {
       std::cout << "Please re-enter one of the aforementioned acronyms.\n";
       main_menu();
@@ -117,6 +159,36 @@ class plot : public rclcpp::Node {
   std::shared_ptr<plot> shared_plot_from_this() {
     return std::static_pointer_cast<plot>((shared_from_this()));
   }
+
+  // This function would load goals from a goal file.
+  void load_goal() {
+    std::cout << "WARNING: loading goals from a goal file would overwrite your "
+                 "existing goals. Continue?\n";
+    if (wait_confirmation()) {
+      // do stuff
+      goal_reader = new json_goal_reader(load_file_path);
+      std::map<std::string, goal_plotter::goal> loaded_goals;
+      loaded_goals = goal_reader->read_json();
+      if (loaded_goals.size() != 0) {
+        // do stuff more here
+        // delete all of the current goals.
+        // firstly for testing we would just print out the values
+        for (auto it = loaded_goals.begin(); it != loaded_goals.end(); it++) {
+          std::cout << it->first << " " << it->second.x << " " << it->second.y
+                    << " " << it->second.z << " " << it->second.w << "\n";
+        }
+
+      } else {
+        std::cout << "ERROR! Goals could not be loaded!\n";
+        main_menu();
+      }
+
+      delete goal_reader;
+    } else {
+      main_menu();
+    }
+  }
+
   // This function would export all goals to a json file
   void export_goal() {
     std::cout << "Do you want to export all goals to a json file?\n";
@@ -364,6 +436,7 @@ class plot : public rclcpp::Node {
   rclcpp::Client<goal_plotter::srv::Sgoal>::SharedPtr sub_goal_client;
   goal_plotter::goal selected_goal;
   json_goal_writer* goal_writer;
+  json_goal_reader* goal_reader;
   std::string save_file_path;
   std::string load_file_path;
   int goal_id = 0;
