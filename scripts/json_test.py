@@ -9,6 +9,7 @@ goal_file = open(
 
 goal_map = json.load(goal_file)
 
+
 for goal_name, goal_location in goal_map.items():
     print(goal_name)
     gx = goal_location[0]

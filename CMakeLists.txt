@@ -77,6 +77,7 @@ install(PROGRAMS
   scripts/py_test.py
   scripts/json_test.py
   scripts/ros_test.py
+  scripts/goal_gui.py
   DESTINATION lib/${PROJECT_NAME})
 
 

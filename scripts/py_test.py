@@ -26,7 +26,6 @@ class gui(object):
             self.top_, text="send_goal", command=self.send_goal_callback
         )
         self.send_goal_button_.place(x=100, y=200)
-        tkinter.mainloop()
 
     def send_goal_callback(self):
         print("callback called!")
@@ -37,7 +36,7 @@ GOALS = ["g1", "g2", "g3"]
 obj_gui = gui(GOALS)
 obj_gui.create_goal_menu()
 # obj_gui.create_goal_button()
-
+tkinter.mainloop()
 
 """
 top = tkinter.Tk()
