@@ -75,6 +75,7 @@ install(TARGETS
 
 install(PROGRAMS
   scripts/py_test.py
+  scripts/json_test.py
   DESTINATION lib/${PROJECT_NAME})
 
 
