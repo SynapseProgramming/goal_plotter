@@ -23,18 +23,13 @@ class gui(object):
         )
         self.goal_menu.place(x=400, y=300)
 
+        # callback_function is the address of the function to callback when the button is pressed.
+
     def create_goal_button(self, callback_function):
         self.send_goal_button_ = tkinter.Button(
             self.top_, text="send_goal", command=callback_function
         )
         self.send_goal_button_.place(x=100, y=200)
-
-    def send_goal_callback(self):
-        print("callback called!")
-        print(self.selected_goal_.get())
-
-
-# obj_gui.create_goal_button()
 
 
 class MinimalPublisher(Node):
@@ -42,13 +37,11 @@ class MinimalPublisher(Node):
         super().__init__("minimal_publisher")
         GOALS = ["g1", "g2", "g3"]
         self.obj_gui_ = gui(GOALS)
-        self.obj_gui_.create_goal_button(self.timer_callback)
-        # self.top = tkinter.Tk()
-        # self.top.geometry("700x800")
+        self.obj_gui_.create_goal_button(self.button_callback)
         self.publisher_ = self.create_publisher(String, "topic", 10)
         self.i = 0
 
-    def timer_callback(self):
+    def button_callback(self):
         msg = String()
         msg.data = "Hello World: %d" % self.i
         self.publisher_.publish(msg)
@@ -62,11 +55,7 @@ def main(args=None):
     minimal_publisher = MinimalPublisher()
 
     tkinter.mainloop()
-    # rclpy.spin(minimal_publisher)
 
-    # Destroy the node explicitly
-    # (optional - otherwise it will be done automatically
-    # when the garbage collector destroys the node object)
     minimal_publisher.destroy_node()
     rclpy.shutdown()
 
