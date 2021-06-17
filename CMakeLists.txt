@@ -17,11 +17,15 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(visualization_msgs REQUIRED)
+find_package(rclpy REQUIRED)
 
+
+ament_python_install_package(${PROJECT_NAME})
 
 rosidl_generate_interfaces(${PROJECT_NAME}
  "srv/Sgoal.srv"
@@ -69,6 +73,9 @@ install(TARGETS
   get_goal
   DESTINATION lib/${PROJECT_NAME})
 
+install(PROGRAMS
+  scripts/py_test.py
+  DESTINATION lib/${PROJECT_NAME})
 
 
 if(BUILD_TESTING)
