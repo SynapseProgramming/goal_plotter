@@ -3,22 +3,28 @@
 
 import tkinter  # note that module name has changed from Tkinter in Python 2 to tkinter in Python 3
 import rclpy
+import json
 from rclpy.node import Node
 from std_msgs.msg import String
 
+goal_file = open(
+    "/home/ro/dev_ws/install/goal_plotter/share/goal_plotter/goal_json/goal_test.json"
+)
+
+
 # in python, calling a function without any brackets would = calling the function by reference ( giving the functions address)
 class gui(object):
-    def __init__(self, goal_map):
+    def __init__(self, goal_names):
 
         self.top_ = tkinter.Tk()
-        self.goal_map_ = goal_map
+        self.goal_names_ = goal_names
         self.top_.geometry("700x800")
 
     def create_goal_menu(self):
         self.selected_goal_ = tkinter.StringVar(self.top_)
-        self.selected_goal_.set(self.goal_map_[0])
+        self.selected_goal_.set("goals")
         self.goal_menu = tkinter.OptionMenu(
-            self.top_, self.selected_goal_, *self.goal_map_
+            self.top_, self.selected_goal_, *self.goal_names_
         )
         self.goal_menu.place(x=400, y=300)
         # get selected_goal would return the name of the selected goal.
@@ -39,8 +45,12 @@ class ros2_main(Node):
     def __init__(self):
         super().__init__("minimal_publisher")
         GOALS = ["g1", "g2", "g3"]
-        # code to get json dict should be placed here
-        self.obj_gui_ = gui(GOALS)
+        # code to get json dict
+        self.goal_file_ = goal_file
+        self.goal_map_ = json.load(self.goal_file_)
+        self.goal_names_ = self.goal_map_.keys()
+
+        self.obj_gui_ = gui(self.goal_names_)
         self.obj_gui_.create_goal_menu()
         self.obj_gui_.create_goal_button(self.button_callback)
         self.publisher_ = self.create_publisher(String, "topic", 10)
