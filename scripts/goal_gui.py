@@ -20,7 +20,7 @@ class gui(object):
 
         self.top_ = tkinter.Tk()
         self.goal_names_ = goal_names
-        self.top_.geometry("700x800")
+        self.top_.geometry("700x600")
 
     def create_goal_menu(self):
         self.selected_goal_ = tkinter.StringVar(self.top_)
@@ -79,10 +79,13 @@ class ros2_main(Node):
 
     def goal_button_callback(self):
         current_goal_name = self.obj_gui_.get_selected_goal()
-        self.current_goal_arr = self.goal_map_[current_goal_name]
-        goal_msg_send = self.generate_goal_message(self.current_goal_arr)
-        self.publisher_.publish(goal_msg_send)
-        self.get_logger().info('Publishing goal: "%s"' % current_goal_name)
+        if current_goal_name == "goals":
+            print("ERROR: NO GOALS SELECTED!")
+        else:
+            self.current_goal_arr = self.goal_map_[current_goal_name]
+            goal_msg_send = self.generate_goal_message(self.current_goal_arr)
+            self.publisher_.publish(goal_msg_send)
+            self.get_logger().info('Publishing goal: "%s"' % current_goal_name)
 
     def cancel_button_callback(self):
         print("cancel button pressed")
