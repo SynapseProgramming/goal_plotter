@@ -36,9 +36,9 @@ class gui(object):
 
     # callback_function is the address of the function to callback when the button is pressed.
 
-    def create_button(self, posx, posy, button_name, callback_function):
+    def create_button(self, posx, posy, button_name, callback_function, button_colour):
         self.send_goal_button_ = tkinter.Button(
-            self.top_, text=button_name, command=callback_function
+            self.top_, text=button_name, command=callback_function, bg=button_colour
         )
         self.send_goal_button_.place(x=posx, y=posy)
 
@@ -62,12 +62,14 @@ class ros2_main(Node):
             posx=100,
             posy=300,
             button_name="send_goal",
+            button_colour="green",
             callback_function=self.goal_button_callback,
         )
         self.obj_gui_.create_button(
             posx=100,
             posy=200,
             button_name="cancel_goal",
+            button_colour="red",
             callback_function=self.cancel_button_callback,
         )
         self.publisher_ = self.create_publisher(PoseStamped, "/goal_pose", 10)
