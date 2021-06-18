@@ -8,12 +8,11 @@ from launch_ros.actions import Node
 def generate_launch_description():
 
     # goal file to load poses from
-    load_goal_file = "first_load_test.json"
+    load_goal_file = "goal_test.json"
 
     load_file_path = os.path.join(
         get_package_share_directory("goal_plotter"), "goal_json", load_goal_file
     )
-
     run_goal_gui = Node(
         package="goal_plotter",
         executable="goal_gui.py",
