@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 ...
 
-import tkinter  # note that module name has changed from Tkinter in Python 2 to tkinter in Python 3
+import tkinter
 import rclpy
 import json
 from rclpy.node import Node
@@ -14,7 +14,6 @@ goal_file = open(
 )
 
 
-# in python, calling a function without any brackets would = calling the function by reference ( giving the functions address)
 class gui(object):
     def __init__(self, goal_names):
 
@@ -45,7 +44,7 @@ class gui(object):
 
 class ros2_main(Node):
     def __init__(self):
-        super().__init__("minimal_publisher")
+        super().__init__("goal_gui")
         # code to get json dict
         self.goal_file_ = goal_file
         self.goal_map_ = json.load(self.goal_file_)
@@ -55,21 +54,13 @@ class ros2_main(Node):
         self.obj_gui_.create_goal_menu()
         self.obj_gui_.create_goal_button(self.button_callback)
         self.publisher_ = self.create_publisher(PoseStamped, "/goal_pose", 10)
-        self.i = 0
 
     def button_callback(self):
-        print(self.obj_gui_.get_selected_goal())
-        # print(self.goal_map_[self.obj_gui_.get_selected_goal()])
-        self.current_goal_arr = self.goal_map_[self.obj_gui_.get_selected_goal()]
-        self.cx = self.current_goal_arr[0]
-        self.cy = self.current_goal_arr[1]
-        self.cz = self.current_goal_arr[2]
-        self.cw = self.current_goal_arr[3]
-        print(self.cx, self.cy, self.cz, self.cw)
+        current_goal_name = self.obj_gui_.get_selected_goal()
+        self.current_goal_arr = self.goal_map_[current_goal_name]
         goal_msg_send = self.generate_goal_message(self.current_goal_arr)
         self.publisher_.publish(goal_msg_send)
-        self.get_logger().info("Publishing to /goal_pose topic")
-        self.i += 1
+        self.get_logger().info('Publishing goal: "%s"' % current_goal_name)
 
     def generate_goal_message(self, goal_array):
         goal_msg = PoseStamped()
