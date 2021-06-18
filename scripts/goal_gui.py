@@ -10,11 +10,6 @@ from action_msgs.srv import CancelGoal
 from rcl_interfaces.msg import ParameterType
 
 
-test_file_path = (
-    "/home/ro/dev_ws/install/goal_plotter/share/goal_plotter/goal_json/goal_test.json"
-)
-
-
 class gui(object):
     def __init__(self, goal_names):
 
@@ -46,7 +41,7 @@ class gui(object):
 class ros2_main(Node):
     def __init__(self):
         super().__init__("goal_gui")
-        self.declare_parameter("load_file_path", test_file_path)
+        self.declare_parameter("load_file_path")
         self.goal_file_path = (
             self.get_parameter("load_file_path").get_parameter_value().string_value
         )
