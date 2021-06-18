@@ -8,6 +8,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import PoseStamped
 from rcl_interfaces.msg import ParameterType
 
+# TODO: Add in a button which cancels all goals when the user presses a button.
 
 test_file_path = (
     "/home/ro/dev_ws/install/goal_plotter/share/goal_plotter/goal_json/goal_test.json"
@@ -35,11 +36,11 @@ class gui(object):
 
     # callback_function is the address of the function to callback when the button is pressed.
 
-    def create_goal_button(self, callback_function):
+    def create_button(self, posx, posy, button_name, callback_function):
         self.send_goal_button_ = tkinter.Button(
-            self.top_, text="send_goal", command=callback_function
+            self.top_, text=button_name, command=callback_function
         )
-        self.send_goal_button_.place(x=100, y=300)
+        self.send_goal_button_.place(x=posx, y=posy)
 
 
 class ros2_main(Node):
@@ -57,15 +58,29 @@ class ros2_main(Node):
 
         self.obj_gui_ = gui(self.goal_names_)
         self.obj_gui_.create_goal_menu()
-        self.obj_gui_.create_goal_button(self.button_callback)
+        self.obj_gui_.create_button(
+            posx=100,
+            posy=300,
+            button_name="send_goal",
+            callback_function=self.goal_button_callback,
+        )
+        self.obj_gui_.create_button(
+            posx=100,
+            posy=200,
+            button_name="cancel_goal",
+            callback_function=self.cancel_button_callback,
+        )
         self.publisher_ = self.create_publisher(PoseStamped, "/goal_pose", 10)
 
-    def button_callback(self):
+    def goal_button_callback(self):
         current_goal_name = self.obj_gui_.get_selected_goal()
         self.current_goal_arr = self.goal_map_[current_goal_name]
         goal_msg_send = self.generate_goal_message(self.current_goal_arr)
         self.publisher_.publish(goal_msg_send)
         self.get_logger().info('Publishing goal: "%s"' % current_goal_name)
+
+    def cancel_button_callback(self):
+        print("cancel button pressed")
 
     def generate_goal_message(self, goal_array):
         goal_msg = PoseStamped()
