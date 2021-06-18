@@ -44,7 +44,6 @@ class gui(object):
 class ros2_main(Node):
     def __init__(self):
         super().__init__("minimal_publisher")
-        GOALS = ["g1", "g2", "g3"]
         # code to get json dict
         self.goal_file_ = goal_file
         self.goal_map_ = json.load(self.goal_file_)
@@ -59,6 +58,13 @@ class ros2_main(Node):
     def button_callback(self):
         msg = String()
         print(self.obj_gui_.get_selected_goal())
+        # print(self.goal_map_[self.obj_gui_.get_selected_goal()])
+        self.current_goal_arr = self.goal_map_[self.obj_gui_.get_selected_goal()]
+        self.cx = self.current_goal_arr[0]
+        self.cy = self.current_goal_arr[1]
+        self.cz = self.current_goal_arr[2]
+        self.cw = self.current_goal_arr[3]
+        print(self.cx, self.cy, self.cz, self.cw)
         msg.data = "Hello World: %d" % self.i
         self.publisher_.publish(msg)
         self.get_logger().info('Publishing: "%s"' % msg.data)
