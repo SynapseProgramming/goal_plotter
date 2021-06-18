@@ -2,8 +2,12 @@ name: Build Test
 
 on:
   pull_request:
+    paths-ignore:
+      - 'rapidjson/**'
   push:
-  
+    paths-ignore:
+      - 'rapidjson/**'
+
 
 jobs:
   build-and-test:
@@ -31,4 +35,3 @@ jobs:
         name: colcon-logs
         path: ros_ws/log
       if: always()
-
