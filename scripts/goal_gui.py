@@ -6,9 +6,9 @@ import rclpy
 import json
 from rclpy.node import Node
 from geometry_msgs.msg import PoseStamped
+from action_msgs.srv import CancelGoal
 from rcl_interfaces.msg import ParameterType
 
-# TODO: Add in a button which cancels all goals when the user presses a button.
 
 test_file_path = (
     "/home/ro/dev_ws/install/goal_plotter/share/goal_plotter/goal_json/goal_test.json"
@@ -71,6 +71,9 @@ class ros2_main(Node):
             callback_function=self.cancel_button_callback,
         )
         self.publisher_ = self.create_publisher(PoseStamped, "/goal_pose", 10)
+        self.service_client_ = self.create_client(
+            CancelGoal, "navigate_to_pose/_action/cancel_goal"
+        )
 
     def goal_button_callback(self):
         current_goal_name = self.obj_gui_.get_selected_goal()
@@ -81,6 +84,12 @@ class ros2_main(Node):
 
     def cancel_button_callback(self):
         print("cancel button pressed")
+        while not self.service_client_.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info("service not available, waiting again...")
+            # Once the server has started, cancel the goal.
+        cancel_goal_req = CancelGoal.Request()
+        # send the cancel signal
+        self.service_client_.call_async(cancel_goal_req)
 
     def generate_goal_message(self, goal_array):
         goal_msg = PoseStamped()

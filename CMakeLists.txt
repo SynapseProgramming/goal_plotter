@@ -23,6 +23,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(rclpy REQUIRED)
+find_package(action_msgs REQUIRED)
 
 
 ament_python_install_package(${PROJECT_NAME})
