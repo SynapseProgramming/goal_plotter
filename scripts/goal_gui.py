@@ -13,7 +13,6 @@ class gui(object):
         self.top_ = tkinter.Tk()
         self.goal_map_ = goal_map
         self.top_.geometry("700x800")
-        self.create_goal_menu()
 
     def create_goal_menu(self):
         self.selected_goal_ = tkinter.StringVar(self.top_)
@@ -22,27 +21,34 @@ class gui(object):
             self.top_, self.selected_goal_, *self.goal_map_
         )
         self.goal_menu.place(x=400, y=300)
+        # get selected_goal would return the name of the selected goal.
 
-        # callback_function is the address of the function to callback when the button is pressed.
+    def get_selected_goal(self):
+        return self.selected_goal_.get()
+
+    # callback_function is the address of the function to callback when the button is pressed.
 
     def create_goal_button(self, callback_function):
         self.send_goal_button_ = tkinter.Button(
             self.top_, text="send_goal", command=callback_function
         )
-        self.send_goal_button_.place(x=100, y=200)
+        self.send_goal_button_.place(x=100, y=300)
 
 
-class MinimalPublisher(Node):
+class ros2_main(Node):
     def __init__(self):
         super().__init__("minimal_publisher")
         GOALS = ["g1", "g2", "g3"]
+        # code to get json dict should be placed here
         self.obj_gui_ = gui(GOALS)
+        self.obj_gui_.create_goal_menu()
         self.obj_gui_.create_goal_button(self.button_callback)
         self.publisher_ = self.create_publisher(String, "topic", 10)
         self.i = 0
 
     def button_callback(self):
         msg = String()
+        print(self.obj_gui_.get_selected_goal())
         msg.data = "Hello World: %d" % self.i
         self.publisher_.publish(msg)
         self.get_logger().info('Publishing: "%s"' % msg.data)
@@ -52,7 +58,7 @@ class MinimalPublisher(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    minimal_publisher = MinimalPublisher()
+    minimal_publisher = ros2_main()
 
     tkinter.mainloop()
 
