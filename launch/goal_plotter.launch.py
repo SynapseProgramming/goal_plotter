@@ -91,21 +91,11 @@ def generate_launch_description():
         output="screen",
     )
 
-    run_goal_gui = Node(
-        package="goal_plotter",
-        executable="goal_gui.py",
-        name="goal_gui",
-        emulate_tty=True,
-        parameters=[{"load_file_path": load_file_path}],
-        output="screen",
-    )
-
     ld = LaunchDescription()
     ld.add_action(run_lifecycle_manager)
     ld.add_action(run_map_server)
     ld.add_action(run_rviz2)
     ld.add_action(run_main_plot)
     ld.add_action(run_get_goal)
-    ld.add_action(run_goal_gui)
 
     return ld
