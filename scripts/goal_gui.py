@@ -6,7 +6,9 @@ import rclpy
 import json
 from rclpy.node import Node
 from std_msgs.msg import String
+from geometry_msgs.msg import PoseStamped
 
+# TODO: add python code to get file path automatically
 goal_file = open(
     "/home/ro/dev_ws/install/goal_plotter/share/goal_plotter/goal_json/goal_test.json"
 )
@@ -52,11 +54,10 @@ class ros2_main(Node):
         self.obj_gui_ = gui(self.goal_names_)
         self.obj_gui_.create_goal_menu()
         self.obj_gui_.create_goal_button(self.button_callback)
-        self.publisher_ = self.create_publisher(String, "topic", 10)
+        self.publisher_ = self.create_publisher(PoseStamped, "/goal_pose", 10)
         self.i = 0
 
     def button_callback(self):
-        msg = String()
         print(self.obj_gui_.get_selected_goal())
         # print(self.goal_map_[self.obj_gui_.get_selected_goal()])
         self.current_goal_arr = self.goal_map_[self.obj_gui_.get_selected_goal()]
@@ -65,10 +66,21 @@ class ros2_main(Node):
         self.cz = self.current_goal_arr[2]
         self.cw = self.current_goal_arr[3]
         print(self.cx, self.cy, self.cz, self.cw)
-        msg.data = "Hello World: %d" % self.i
-        self.publisher_.publish(msg)
-        self.get_logger().info('Publishing: "%s"' % msg.data)
+        goal_msg_send = self.generate_goal_message(self.current_goal_arr)
+        self.publisher_.publish(goal_msg_send)
+        self.get_logger().info("Publishing to /goal_pose topic")
         self.i += 1
+
+    def generate_goal_message(self, goal_array):
+        goal_msg = PoseStamped()
+        goal_msg.pose.position.x = goal_array[0]
+        goal_msg.pose.position.y = goal_array[1]
+        goal_msg.pose.orientation.z = goal_array[2]
+        goal_msg.pose.orientation.w = goal_array[3]
+
+        goal_msg.header.stamp = self.get_clock().now().to_msg()
+        goal_msg.header.frame_id = "map"
+        return goal_msg
 
 
 def main(args=None):

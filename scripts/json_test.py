@@ -8,8 +8,11 @@ goal_file = open(
 )
 
 goal_map = json.load(goal_file)
+goal_names = goal_map.keys()
 
-
+for i in goal_names:
+    print(i)
+"""
 for goal_name, goal_location in goal_map.items():
     print(goal_name)
     gx = goal_location[0]
@@ -17,3 +20,4 @@ for goal_name, goal_location in goal_map.items():
     gz = goal_location[2]
     gw = goal_location[3]
     print(gx, gy, gz, gw)
+    """
