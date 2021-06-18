@@ -15,7 +15,7 @@ class gui(object):
 
         self.top_ = tkinter.Tk()
         self.goal_names_ = goal_names
-        self.top_.geometry("700x600")
+        self.top_.geometry("600x500")
 
     def create_goal_menu(self):
         self.selected_goal_ = tkinter.StringVar(self.top_)
