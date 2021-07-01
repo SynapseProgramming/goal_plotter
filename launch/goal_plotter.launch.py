@@ -13,9 +13,9 @@ def generate_launch_description():
 
     map_name = "dmro_lab_7jun.yaml"
     # goal file to save goal poses to.
-    save_goal_file = "first_load_test.json"
+    save_goal_file = "goal_test.json"
     # goal file to load poses from
-    load_goal_file = "first_load_test.json"
+    load_goal_file = "goal_test.json"
     autostart = True
     use_sim_time = False
 
