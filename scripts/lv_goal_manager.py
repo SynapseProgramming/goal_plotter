@@ -14,6 +14,7 @@ class ros2_main(Node):
         self.goal_name_ = str()
         self.send_goal_ = False
         self.cancel_goal_ = False
+        self.timer = self.create_timer(0.1, self.timed_callback)
         self.declare_parameter("load_file_path")
         self.goal_file_path = (
             self.get_parameter("load_file_path").get_parameter_value().string_value
@@ -30,6 +31,9 @@ class ros2_main(Node):
             Goalactions, "goal_actions", self.update_actions, 10
         )
         self.subscription
+
+    def timed_callback(self):
+        print("timed callback called!")
 
     def update_actions(self, msg):
         print(str(self.goal_name_))
