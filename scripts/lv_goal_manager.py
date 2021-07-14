@@ -2,6 +2,7 @@
 ...
 
 from goal_plotter.msg import Goalactions
+from nav2_msgs.action import NavigateToPose
 from std_msgs.msg import Int32
 
 import rclpy
