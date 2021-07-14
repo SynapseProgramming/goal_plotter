@@ -30,6 +30,7 @@ ament_python_install_package(${PROJECT_NAME})
 
 rosidl_generate_interfaces(${PROJECT_NAME}
  "srv/Sgoal.srv"
+ "msg/Goalactions.msg"
  )
 
 
@@ -76,6 +77,7 @@ install(TARGETS
 
 install(PROGRAMS
   scripts/goal_gui.py
+  scripts/lv_goal_manager.py
   DESTINATION lib/${PROJECT_NAME})
 
 
