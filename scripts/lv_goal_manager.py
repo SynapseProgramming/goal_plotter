@@ -14,6 +14,7 @@ class ros2_main(Node):
         self.goal_name_ = str()
         self.send_goal_ = False
         self.cancel_goal_ = False
+        self.current_state_ = 0
         self.timer = self.create_timer(0.1, self.timed_callback)
         self.declare_parameter("load_file_path")
         self.goal_file_path = (
@@ -24,7 +25,7 @@ class ros2_main(Node):
         # code to get json dict
         self.goal_map_ = json.load(self.goal_file_)
         self.goal_names_ = self.goal_map_.keys()
-        # TODO: remove test code later
+        print("Loaded waypoints:")
         for x in self.goal_map_:
             print(str(x))
         self.subscription = self.create_subscription(
@@ -33,12 +34,16 @@ class ros2_main(Node):
         self.subscription
 
     def timed_callback(self):
-        print("timed callback called!")
+        # send a goal to nav stack when the send_goal is true and there is a valid goal
+        if (
+            (self.goal_name_ in self.goal_map_)
+            and self.current_state_ == 0
+            and self.send_goal_ == True
+        ):
+            print("STONKS")
+            self.current_state_ = 1
 
     def update_actions(self, msg):
-        print(str(self.goal_name_))
-        print(str(self.send_goal_))
-        print(str(self.cancel_goal_))
         self.goal_name_ = msg.goal_name
         self.send_goal_ = msg.send_goal
         self.cancel_goal_ = msg.cancel_goal
