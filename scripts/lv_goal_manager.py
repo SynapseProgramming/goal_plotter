@@ -2,6 +2,7 @@
 ...
 
 from goal_plotter.msg import Goalactions
+from std_msgs.msg import Int32
 
 import rclpy
 import json
@@ -31,6 +32,7 @@ class ros2_main(Node):
         self.subscription = self.create_subscription(
             Goalactions, "goal_actions", self.update_actions, 10
         )
+        self.status_publisher = self.create_publisher(Int32, "goal_state", 10)
         self.subscription
 
     def timed_callback(self):
@@ -42,6 +44,12 @@ class ros2_main(Node):
         ):
             print("STONKS")
             self.current_state_ = 1
+        self.pub_status(self.current_state_)
+
+    def pub_status(self, stat):
+        msg = Int32()
+        msg.data = stat
+        self.status_publisher.publish(msg)
 
     def update_actions(self, msg):
         self.goal_name_ = msg.goal_name
