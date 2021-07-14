@@ -10,15 +10,21 @@ from rclpy.node import Node
 class ros2_main(Node):
     def __init__(self):
         super().__init__("nav2_goal_manager")
+        self.goal_name_ = str()
+        self.send_goal_ = False
+        self.cancel_goal_ = False
         self.subscription = self.create_subscription(
             Goalactions, "goal_actions", self.update_actions, 10
         )
         self.subscription
 
     def update_actions(self, msg):
-        print(str(msg.goal_name))
-        print(str(msg.send_goal))
-        print(str(msg.cancel_goal))
+        print(str(self.goal_name_))
+        print(str(self.send_goal_))
+        print(str(self.cancel_goal_))
+        self.goal_name_ = msg.goal_name
+        self.send_goal_ = msg.send_goal
+        self.cancel_goal_ = msg.cancel_goal
 
 
 def main(args=None):
