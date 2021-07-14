@@ -84,7 +84,7 @@ class ros2_main(Node):
         self.send_goal_ = False
         self.cancel_goal_ = False
         self.current_state_ = 0
-        self.timer = self.create_timer(0.1, self.timed_callback)
+        self.timer = self.create_timer(0.02, self.timed_callback)
         self.declare_parameter("load_file_path")
         self.goal_file_path = (
             self.get_parameter("load_file_path").get_parameter_value().string_value
