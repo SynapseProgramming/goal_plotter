@@ -7,32 +7,28 @@ import rclpy
 from rclpy.node import Node
 
 
-class MinimalPublisher(Node):
+class ros2_main(Node):
     def __init__(self):
-        super().__init__("minimal_publisher")
-        self.publisher_ = self.create_publisher(
-            Goalactions, "goal_actions", 10
-        )  # CHANGE
-        timer_period = 0.5
-        self.timer = self.create_timer(timer_period, self.timer_callback)
+        super().__init__("nav2_goal_manager")
+        self.subscription = self.create_subscription(
+            Goalactions, "goal_actions", self.update_actions, 10
+        )
+        self.subscription
 
-    def timer_callback(self):
-        msg = Goalactions()  # CHANGE
-        msg.goal_name = "TEST"
-        msg.send_goal = True
-        msg.cancel_goal = False
-        self.publisher_.publish(msg)
-        self.get_logger().info("Publishing!")  # CHANGE
+    def update_actions(self, msg):
+        print(str(msg.goal_name))
+        print(str(msg.send_goal))
+        print(str(msg.cancel_goal))
 
 
 def main(args=None):
     rclpy.init(args=args)
 
-    minimal_publisher = MinimalPublisher()
+    nav2_goal_manager = ros2_main()
 
-    rclpy.spin(minimal_publisher)
+    rclpy.spin(nav2_goal_manager)
 
-    minimal_publisher.destroy_node()
+    nav2_goal_manager.destroy_node()
     rclpy.shutdown()
 
 
