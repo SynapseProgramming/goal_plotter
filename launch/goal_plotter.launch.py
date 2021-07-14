@@ -11,7 +11,7 @@ from nav2_common.launch import RewrittenYaml
 
 def generate_launch_description():
 
-    map_name = "dmro_lab_7jun.yaml"
+    map_name = "dmro_mapjuly.yaml"
     # goal file to save goal poses to.
     save_goal_file = "goal_test.json"
     # goal file to load poses from
