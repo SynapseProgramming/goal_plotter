@@ -4,6 +4,7 @@
 from goal_plotter.msg import Goalactions
 from nav2_msgs.action import NavigateToPose
 from action_msgs.msg import GoalStatus
+from action_msgs.srv import CancelGoal
 from std_msgs.msg import Int32
 
 import rclpy
@@ -92,7 +93,7 @@ class ros2_main(Node):
 
         # code to get json dict
         self.goal_map_ = json.load(self.goal_file_)
-        self.goal_names_ = self.goal_map_.keys()
+        self.goal_key_names_ = self.goal_map_.keys()
         print("Loaded waypoints:")
         for x in self.goal_map_:
             print(str(x))
@@ -104,12 +105,27 @@ class ros2_main(Node):
         self.goto_pose_ = goto_pose(
             ActionClient(self, NavigateToPose, "navigate_to_pose")
         )
+        self.service_client_ = self.create_client(
+            CancelGoal, "navigate_to_pose/_action/cancel_goal"
+        )
 
     def timed_callback(self):
         # update statuses
         nav2_status = self.goto_pose_.get_status()
+        # if the cancel flag is true, we will cancel all goals and reset state.
+        if self.cancel_goal_ == True:
+            print("Cancelling Goal")
+            while not self.service_client_.wait_for_service(timeout_sec=1.0):
+                self.get_logger().info("service not available, waiting again...")
+            # Once the server has started, cancel the goal.
+            cancel_goal_req = CancelGoal.Request()
+            # send the cancel signal
+            self.service_client_.call_async(cancel_goal_req)
+            # reset all variables
+            self.reset_all()
+
         # send a goal to nav stack when the send_goal is true and there is a valid goal
-        if (
+        elif (
             (self.goal_name_ in self.goal_map_)
             and self.goal_name_ != self.reached_goal_name
             and self.current_state_ == 0
@@ -141,6 +157,12 @@ class ros2_main(Node):
         self.goal_name_ = msg.goal_name
         self.send_goal_ = msg.send_goal
         self.cancel_goal_ = msg.cancel_goal
+
+    def reset_all(self):
+        self.reached_goal_name = ""
+        self.sent_goal_name = ""
+        self.goto_pose_.reset_status()
+        self.current_state_ = 0
 
 
 def main(args=None):
