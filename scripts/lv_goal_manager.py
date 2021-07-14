@@ -113,6 +113,14 @@ class ros2_main(Node):
         ):
             self.goto_pose_.send_goal(self.goal_map_[self.goal_name_])
             self.current_state_ = 1
+        # once the robot has reached the goal, reset state back to 0
+        elif (
+            self.current_state_ == 1
+            and nav2_status["gs"] == True
+            and nav2_status["gas"] == True
+        ):
+            print("Goal Reached!")
+            self.current_state_ = 0
         self.pub_status(self.current_state_)
 
     def pub_status(self, stat):
