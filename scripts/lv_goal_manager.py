@@ -3,6 +3,7 @@
 
 from goal_plotter.msg import Goalactions
 from nav2_msgs.action import NavigateToPose
+from action_msgs.msg import GoalStatus
 from std_msgs.msg import Int32
 
 import rclpy
@@ -77,6 +78,8 @@ class ros2_main(Node):
     def __init__(self):
         super().__init__("nav2_goal_manager")
         self.goal_name_ = str()
+        self.reached_goal_name = str()
+        self.sent_goal_name = str()
         self.send_goal_ = False
         self.cancel_goal_ = False
         self.current_state_ = 0
@@ -108,10 +111,12 @@ class ros2_main(Node):
         # send a goal to nav stack when the send_goal is true and there is a valid goal
         if (
             (self.goal_name_ in self.goal_map_)
+            and self.goal_name_ != self.reached_goal_name
             and self.current_state_ == 0
             and self.send_goal_ == True
         ):
             self.goto_pose_.send_goal(self.goal_map_[self.goal_name_])
+            self.sent_goal_name = self.goal_name_
             self.current_state_ = 1
         # once the robot has reached the goal, reset state back to 0
         elif (
@@ -120,6 +125,10 @@ class ros2_main(Node):
             and nav2_status["gas"] == True
         ):
             print("Goal Reached!")
+            self.goto_pose_.reset_status()
+            self.reached_goal_name = self.sent_goal_name
+            # default send_goal_ back to false
+            self.send_goal_ = False
             self.current_state_ = 0
         self.pub_status(self.current_state_)
 
