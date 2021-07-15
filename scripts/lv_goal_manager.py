@@ -29,7 +29,7 @@ class goto_pose:
 
         print("nav2 Goal accepted")
         self.goal_accept_status = True
-
+        self._goal_handle = goal_handle
         self._get_result_future = goal_handle.get_result_async()
         self._get_result_future.add_done_callback(self.get_result_callback)
 
@@ -45,7 +45,20 @@ class goto_pose:
             self.goal_status = False
             self.failure_flag = True
 
-        # send_goal would accept an array as a goal pose
+    def cancel_current_goal(self):
+        print("Canceling goal")
+        # Cancel the goal
+        future = self._goal_handle.cancel_goal_async()
+        future.add_done_callback(self.cancel_done)
+
+    def cancel_done(self, future):
+        cancel_response = future.result()
+        if len(cancel_response.goals_canceling) > 0:
+            print("Goal successfully canceled")
+        else:
+            print("Goal failed to cancel")
+
+    # send_goal would accept an array as a goal pose
 
     def send_goal(self, goal_pose):
         print("Waiting for action server")
@@ -113,14 +126,9 @@ class ros2_main(Node):
         # update statuses
         nav2_status = self.goto_pose_.get_status()
         # if the cancel flag is true, we will cancel all goals and reset state.
-        if self.cancel_goal_ == True:
+        if self.cancel_goal_ == True and self.current_state_ == 1:
             print("Cancelling Goal")
-            while not self.service_client_.wait_for_service(timeout_sec=1.0):
-                self.get_logger().info("service not available, waiting again...")
-            # Once the server has started, cancel the goal.
-            cancel_goal_req = CancelGoal.Request()
-            # send the cancel signal
-            self.service_client_.call_async(cancel_goal_req)
+            self.goto_pose_.cancel_current_goal()
             # reset all variables
             self.reset_all()
 
