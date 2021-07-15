@@ -40,6 +40,8 @@ class goto_pose:
         if status == GoalStatus.STATUS_SUCCEEDED:
             print("navigation succeeded")
             self.goal_status = True
+        elif status == GoalStatus.STATUS_CANCELED:
+            print("Goal Cancelling!")
         else:
             print("navigation failed!")
             self.goal_status = False
@@ -118,13 +120,16 @@ class ros2_main(Node):
         self.goto_pose_ = goto_pose(
             ActionClient(self, NavigateToPose, "navigate_to_pose")
         )
-        self.service_client_ = self.create_client(
-            CancelGoal, "navigate_to_pose/_action/cancel_goal"
-        )
 
     def timed_callback(self):
         # update statuses
         nav2_status = self.goto_pose_.get_status()
+        if nav2_status["f_flag"] == True and self.current_state_ != 2:
+            self.current_state_ = 2
+
+        elif self.cancel_goal_ == True and self.current_state_ == 2:
+            print("Resetting back to 0 state")
+            self.reset_all()
         # if the cancel flag is true, we will cancel all goals and reset state.
         if self.cancel_goal_ == True and self.current_state_ == 1:
             print("Cancelling Goal")
