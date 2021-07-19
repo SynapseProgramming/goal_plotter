@@ -24,12 +24,14 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(action_msgs REQUIRED)
+find_package(nav2_msgs REQUIRED)
 
 
 ament_python_install_package(${PROJECT_NAME})
 
 rosidl_generate_interfaces(${PROJECT_NAME}
  "srv/Sgoal.srv"
+ "msg/Goalactions.msg"
  )
 
 
@@ -76,6 +78,8 @@ install(TARGETS
 
 install(PROGRAMS
   scripts/goal_gui.py
+  scripts/lv_goal_manager.py
+  scripts/lv_goal_converter.py
   DESTINATION lib/${PROJECT_NAME})
 
 
