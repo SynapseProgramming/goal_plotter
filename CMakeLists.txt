@@ -79,6 +79,7 @@ install(TARGETS
 install(PROGRAMS
   scripts/goal_gui.py
   scripts/lv_goal_manager.py
+  scripts/lv_goal_converter.py
   DESTINATION lib/${PROJECT_NAME})
 
 
