@@ -9,7 +9,7 @@ def generate_launch_description():
 
     # goal file to load poses from
     load_goal_file = "goal_test.json"
-    save_goal_file = "lv_goal.json "
+    save_goal_file = "lv_goal.json"
 
     load_file_path = os.path.join(
         get_package_share_directory("goal_plotter"), "goal_json", load_goal_file

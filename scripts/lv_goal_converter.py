@@ -23,19 +23,32 @@ class ros2_main(Node):
         # code to get json dict
         self.goal_map_ = json.load(self.goal_file_)
         self.goal_key_names_ = self.goal_map_.keys()
+        self.lv_goal_arr = []
         print("Loaded waypoints:")
-        for x in self.goal_map_:
-            print(str(x))
-        print(self.save_file_path)
+
+    def convert_single_goal(self, goal_name):
+        single_goal = {}
+        single_goal["goal_name"] = goal_name
+        single_goal["goal_pos"] = self.goal_map_[goal_name]
+        return single_goal
+
+    def write_to_lv(self):
+        print("writing to lv_goal_file")
+        for x in self.goal_key_names_:
+            self.lv_goal_arr.insert(0, self.convert_single_goal(goal_name=str(x)))
+
+        with open(self.save_file_path, "w") as outfile:
+            json.dump(self.lv_goal_arr, outfile)
 
 
 def main(args=None):
     rclpy.init(args=args)
-    nav2_goal_manager = ros2_main()
+    lv_goal_converter = ros2_main()
+    lv_goal_converter.write_to_lv()
 
-    rclpy.spin(nav2_goal_manager)
+    rclpy.spin(lv_goal_converter)
 
-    nav2_goal_manager.destroy_node()
+    lv_goal_converter.destroy_node()
     rclpy.shutdown()
 
 
