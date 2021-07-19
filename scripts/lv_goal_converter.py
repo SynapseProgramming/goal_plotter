@@ -14,14 +14,19 @@ class ros2_main(Node):
         self.goal_file_path = (
             self.get_parameter("load_file_path").get_parameter_value().string_value
         )
-        self.goal_file_ = open(self.goal_file_path)
+        self.declare_parameter("save_file_path")
+        self.save_file_path = (
+            self.get_parameter("save_file_path").get_parameter_value().string_value
+        )
 
+        self.goal_file_ = open(self.goal_file_path)
         # code to get json dict
         self.goal_map_ = json.load(self.goal_file_)
         self.goal_key_names_ = self.goal_map_.keys()
         print("Loaded waypoints:")
         for x in self.goal_map_:
             print(str(x))
+        print(self.save_file_path)
 
 
 def main(args=None):
