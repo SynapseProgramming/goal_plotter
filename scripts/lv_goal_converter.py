@@ -46,8 +46,6 @@ def main(args=None):
     lv_goal_converter = ros2_main()
     lv_goal_converter.write_to_lv()
 
-    rclpy.spin(lv_goal_converter)
-
     lv_goal_converter.destroy_node()
     rclpy.shutdown()
 
