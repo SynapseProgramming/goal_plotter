@@ -94,7 +94,6 @@ class ros2_main(Node):
     def __init__(self):
         super().__init__("nav2_goal_manager")
         self.goal_name_ = str()
-        self.reached_goal_name = str()
         self.sent_goal_name = str()
         self.send_goal_ = False
         self.cancel_goal_ = False
@@ -140,7 +139,6 @@ class ros2_main(Node):
         # send a goal to nav stack when the send_goal is true and there is a valid goal
         elif (
             (self.goal_name_ in self.goal_map_)
-            and self.goal_name_ != self.reached_goal_name
             and self.current_state_ == 0
             and self.send_goal_ == True
         ):
@@ -155,7 +153,6 @@ class ros2_main(Node):
         ):
             print("Goal Reached!")
             self.goto_pose_.reset_status()
-            self.reached_goal_name = self.sent_goal_name
             # default send_goal_ back to false
             self.send_goal_ = False
             self.current_state_ = 0
@@ -172,7 +169,6 @@ class ros2_main(Node):
         self.cancel_goal_ = msg.cancel_goal
 
     def reset_all(self):
-        self.reached_goal_name = ""
         self.sent_goal_name = ""
         self.goto_pose_.reset_status()
         self.current_state_ = 0
