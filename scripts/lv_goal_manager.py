@@ -6,7 +6,7 @@ from nav2_msgs.action import NavigateToPose
 from action_msgs.msg import GoalStatus
 from action_msgs.srv import CancelGoal
 from std_msgs.msg import Int32
-
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 import rclpy
 import json
 from rclpy.node import Node
@@ -104,6 +104,11 @@ class ros2_main(Node):
             self.get_parameter("load_file_path").get_parameter_value().string_value
         )
         self.goal_file_ = open(self.goal_file_path)
+        self.qos_profile_ = QoSProfile(
+            reliability=QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
+            history=QoSHistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+            depth=1,
+        )
 
         # code to get json dict
         self.goal_map_ = json.load(self.goal_file_)
@@ -112,7 +117,10 @@ class ros2_main(Node):
         for x in self.goal_map_:
             print(str(x))
         self.subscription = self.create_subscription(
-            Goalactions, "goal_actions", self.update_actions, 10
+            Goalactions,
+            "goal_actions",
+            self.update_actions,
+            self.qos_profile_,
         )
         self.status_publisher = self.create_publisher(Int32, "goal_state", 10)
         self.subscription
