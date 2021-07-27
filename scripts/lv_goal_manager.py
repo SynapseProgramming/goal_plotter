@@ -107,7 +107,7 @@ class ros2_main(Node):
         self.qos_profile_ = QoSProfile(
             reliability=QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
             history=QoSHistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST,
-            depth=1,
+            depth=10,
         )
 
         # code to get json dict
