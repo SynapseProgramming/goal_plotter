@@ -21,6 +21,7 @@ find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(goal_plotter_messages REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(action_msgs REQUIRED)
@@ -29,31 +30,23 @@ find_package(nav2_msgs REQUIRED)
 
 ament_python_install_package(${PROJECT_NAME})
 
-rosidl_generate_interfaces(${PROJECT_NAME}
- "srv/Sgoal.srv"
- "msg/Goalactions.msg"
- )
-
-
 
 
 #add executables
 add_executable(main_plot src/main_plot.cpp)
-ament_target_dependencies(main_plot rclcpp geometry_msgs visualization_msgs)
+ament_target_dependencies(main_plot rclcpp geometry_msgs visualization_msgs goal_plotter_messages)
 target_include_directories(main_plot
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
-rosidl_target_interfaces(main_plot ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 
 add_executable(get_goal src/get_goal.cpp)
-ament_target_dependencies(get_goal rclcpp geometry_msgs)
+ament_target_dependencies(get_goal rclcpp geometry_msgs goal_plotter_messages)
 target_include_directories(get_goal
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
-rosidl_target_interfaces(get_goal ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 
 install(
@@ -66,7 +59,6 @@ install(
   launch
   goal_json
   rviz
-  srv
   param
   DESTINATION share/${PROJECT_NAME}
 )
