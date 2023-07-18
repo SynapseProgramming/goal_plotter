@@ -12,7 +12,6 @@ from rcl_interfaces.msg import ParameterType
 
 class gui(object):
     def __init__(self, goal_names):
-
         self.top_ = tkinter.Tk()
         self.goal_names_ = goal_names
         self.top_.geometry("600x500")
@@ -41,7 +40,7 @@ class gui(object):
 class ros2_main(Node):
     def __init__(self):
         super().__init__("goal_gui")
-        self.declare_parameter("load_file_path")
+        self.declare_parameter("load_file_path", "null")
         self.goal_file_path = (
             self.get_parameter("load_file_path").get_parameter_value().string_value
         )
