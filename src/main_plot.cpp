@@ -317,15 +317,16 @@ class plot : public rclcpp::Node {
     // Wait for the result.
     if (rclcpp::spin_until_future_complete(current_node_ptr, result) ==
         rclcpp::FutureReturnCode::SUCCESS) {
+          auto res = result.get();
       RCLCPP_INFO(
           rclcpp::get_logger("rclcpp"),
           "[goal_plotter] Received goal values: x: %f y: %f z: %f w: %f",
-          result.get()->x, result.get()->y, result.get()->z, result.get()->w);
+          res->x, res->y, res->z, res->w);
       // copy over the selected goal positions
-      selected_goal.x = result.get()->x;
-      selected_goal.y = result.get()->y;
-      selected_goal.z = result.get()->z;
-      selected_goal.w = result.get()->w;
+      selected_goal.x = res->x;
+      selected_goal.y = res->y;
+      selected_goal.z = res->z;
+      selected_goal.w = res->w;
     } else {
       RCLCPP_ERROR(rclcpp::get_logger("rclcpp"),
                    "Failed to call service Goal not added to goal_map.");
