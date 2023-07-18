@@ -5,7 +5,7 @@
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "goal_plotter/goal.hpp"
-#include "goal_plotter/srv/sgoal.hpp"
+#include "goal_plotter_messages/srv/sgoal.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 class get_goal : public rclcpp::Node {
@@ -30,8 +30,8 @@ class get_goal : public rclcpp::Node {
         };
 
     auto send_goal =
-        [this](const std::shared_ptr<goal_plotter::srv::Sgoal::Request> request,
-               const std::shared_ptr<goal_plotter::srv::Sgoal::Response>
+        [this](const std::shared_ptr<goal_plotter_messages::srv::Sgoal::Request> request,
+               const std::shared_ptr<goal_plotter_messages::srv::Sgoal::Response>
                    response) {
           data = request->data;
           // send over the selected goal.
@@ -46,14 +46,14 @@ class get_goal : public rclcpp::Node {
     goal_subscriber =
         this->create_subscription<geometry_msgs::msg::PoseStamped>(
             "goal_pose", 10, goal_callback);
-    goal_service = this->create_service<goal_plotter::srv::Sgoal>(
+    goal_service = this->create_service<goal_plotter_messages::srv::Sgoal>(
         "get_curr_goal", send_goal);
   }
 
  private:
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr
       goal_subscriber;
-  rclcpp::Service<goal_plotter::srv::Sgoal>::SharedPtr goal_service;
+  rclcpp::Service<goal_plotter_messages::srv::Sgoal>::SharedPtr goal_service;
   goal_plotter::goal selected_goal;
   bool data = false;
 };

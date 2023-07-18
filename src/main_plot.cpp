@@ -8,7 +8,7 @@
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "goal_plotter/goal.hpp"
-#include "goal_plotter/srv/sgoal.hpp"
+#include "goal_plotter_messages/srv/sgoal.hpp"
 #include "rapidjson/document.h"
 #include "rapidjson/istreamwrapper.h"
 #include "rapidjson/prettywriter.h"
@@ -111,7 +111,7 @@ class plot : public rclcpp::Node {
  public:
   plot() : Node("goal_plotter") {
     sub_goal_client =
-        this->create_client<goal_plotter::srv::Sgoal>("get_curr_goal");
+        this->create_client<goal_plotter_messages::srv::Sgoal>("get_curr_goal");
 
     marker_array_pub =
         this->create_publisher<visualization_msgs::msg::MarkerArray>(
@@ -299,7 +299,7 @@ class plot : public rclcpp::Node {
   }
   void update_selected_goal() {
     std::shared_ptr<plot> current_node_ptr = shared_plot_from_this();
-    auto request = std::make_shared<goal_plotter::srv::Sgoal::Request>();
+    auto request = std::make_shared<goal_plotter_messages::srv::Sgoal::Request>();
     request->data = false;
     // wait for the server to be up
     while (!sub_goal_client->wait_for_service(1s)) {
@@ -447,7 +447,7 @@ class plot : public rclcpp::Node {
   std::map<std::string, goal_plotter::goal> goal_map;
   std::map<std::string, int> marker_map;
 
-  rclcpp::Client<goal_plotter::srv::Sgoal>::SharedPtr sub_goal_client;
+  rclcpp::Client<goal_plotter_messages::srv::Sgoal>::SharedPtr sub_goal_client;
   goal_plotter::goal selected_goal;
   json_goal_writer* goal_writer;
   json_goal_reader* goal_reader;
