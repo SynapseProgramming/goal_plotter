@@ -10,11 +10,11 @@ import rclpy
 class ros2_main(Node):
     def __init__(self):
         super().__init__("lv_goal_converter")
-        self.declare_parameter("load_file_path")
+        self.declare_parameter("load_file_path","null")
         self.goal_file_path = (
             self.get_parameter("load_file_path").get_parameter_value().string_value
         )
-        self.declare_parameter("save_file_path")
+        self.declare_parameter("save_file_path","null")
         self.save_file_path = (
             self.get_parameter("save_file_path").get_parameter_value().string_value
         )
