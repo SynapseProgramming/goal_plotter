@@ -11,7 +11,7 @@ from nav2_common.launch import RewrittenYaml
 
 def generate_launch_description():
 
-    map_name = "dmro_mapjuly.yaml"
+    map_name = "2005375_full_map.yaml"
     # goal file to save goal poses to.
     save_goal_file = "goal_test.json"
     # goal file to load poses from
@@ -20,7 +20,7 @@ def generate_launch_description():
     use_sim_time = False
 
     map_yaml_file = os.path.join(
-        get_package_share_directory("simple_navigation"), "map", map_name
+        get_package_share_directory("warehousebot_navigation"), "maps", map_name
     )
     params_file = os.path.join(
         get_package_share_directory("goal_plotter"), "param", "map_server_config.yaml"
