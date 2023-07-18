@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 ...
 
-from goal_plotter.msg import Goalactions
+from goal_plotter_messages.msg import Goalactions
 from nav2_msgs.action import NavigateToPose
 from action_msgs.msg import GoalStatus
 from action_msgs.srv import CancelGoal
@@ -34,7 +34,6 @@ class goto_pose:
         self._get_result_future.add_done_callback(self.get_result_callback)
 
     def get_result_callback(self, future):
-
         result = future.result().result
         status = future.result().status
         if status == GoalStatus.STATUS_SUCCEEDED:
@@ -99,14 +98,14 @@ class ros2_main(Node):
         self.cancel_goal_ = False
         self.current_state_ = 0
         self.timer = self.create_timer(0.02, self.timed_callback)
-        self.declare_parameter("load_file_path")
+        self.declare_parameter("load_file_path", "null")
         self.goal_file_path = (
             self.get_parameter("load_file_path").get_parameter_value().string_value
         )
         self.goal_file_ = open(self.goal_file_path)
         self.qos_profile_ = QoSProfile(
-            reliability=QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
-            history=QoSHistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+            reliability=QoSReliabilityPolicy.BEST_EFFORT,
+            history=QoSHistoryPolicy.KEEP_LAST,
             depth=10,
         )
 
