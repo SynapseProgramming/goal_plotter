@@ -7,7 +7,6 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 import rclpy
 import json
 from rclpy.node import Node
-from rclpy.action import ActionClient
 
 
 class ros2_main(Node):
@@ -30,17 +29,23 @@ class ros2_main(Node):
         print("Loaded waypoints:")
         for x in self.goal_map_:
             print(str(x))
-        # self.subscription = self.create_subscription(
-        #     Goalactions,
-        #     "goal_actions",
-        #     self.update_actions,
-        #     self.qos_profile_,
-        # )
+        self.subscription = self.create_subscription(
+            Goalactions,
+            "goal_actions",
+            self.goal_callback,
+            self.qos_profile_,
+        )
         # self.status_publisher = self.create_publisher(Int32, "goal_state", 10)
         # self.subscription
         # self.goto_pose_ = goto_pose(
         #     ActionClient(self, NavigateToPose, "navigate_to_pose")
         # )
+
+    def goal_callback(self, msg):
+        print(msg.x)
+        print(msg.y)
+        print(msg.z)
+        print(msg.w)
 
 
 def main(args=None):
