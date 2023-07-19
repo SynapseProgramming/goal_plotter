@@ -44,8 +44,9 @@ class ros2_main(Node):
     def goal_callback(self, msg):
         done = self.nav2.isTaskComplete()
         nav_result = self.nav2.getResult()
-        # if the robot has somehow failed, then transition the state to 2
-        if nav_result == TaskResult.FAILED and done:
+        print(done)
+        # if the robot has somehow failed(when not idling), then transition the state to 2 
+        if nav_result == TaskResult.FAILED and done and self.status.data>=1:
             print("NAV FAILED")
             self.status.data = 2
         # if the robot has reached the goal, reset the status
