@@ -35,17 +35,16 @@ class ros2_main(Node):
             self.goal_callback,
             self.qos_profile_,
         )
-        # self.status_publisher = self.create_publisher(Int32, "goal_state", 10)
-        # self.subscription
-        # self.goto_pose_ = goto_pose(
-        #     ActionClient(self, NavigateToPose, "navigate_to_pose")
-        # )
+        self.status_publisher = self.create_publisher(Int32, "goal_state", 10)
 
     def goal_callback(self, msg):
         print(msg.x)
         print(msg.y)
         print(msg.z)
         print(msg.w)
+        status = Int32()
+        status.data = 5
+        self.status_publisher.publish(status)
 
 
 def main(args=None):
