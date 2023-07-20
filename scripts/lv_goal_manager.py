@@ -41,7 +41,7 @@ class ros2_main(Node):
             self.qos_profile_,
         )
         self.status_publisher = self.create_publisher(Int32, "goal_state", 10)
-        self.timer = self.create_timer(0.5, self.timer_callback)
+        self.timer = self.create_timer(0.1, self.timer_callback)
 
     def goal_callback(self, m):
         self.msg = m
@@ -49,14 +49,11 @@ class ros2_main(Node):
     def timer_callback(self):
         done = self.nav2.isTaskComplete()
         nav_result = self.nav2.getResult()
-        print(done)
         # if the robot has somehow failed(when not idling), then transition the state to 2
         if nav_result == TaskResult.FAILED and done and self.status.data >= 1:
-            print("NAV FAILED")
             self.status.data = 2
         # if the robot has reached the goal, reset the status
         elif nav_result == TaskResult.SUCCEEDED and done:
-            print("GOAL SUCCEEDED!")
             self.status.data = 0
 
         # if cancelled button is pressed, reset all goals
