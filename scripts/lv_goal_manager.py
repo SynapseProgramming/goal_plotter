@@ -2,102 +2,21 @@
 ...
 
 from goal_plotter_messages.msg import Goalactions
-from nav2_msgs.action import NavigateToPose
-from action_msgs.msg import GoalStatus
-from action_msgs.srv import CancelGoal
 from std_msgs.msg import Int32
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
+from geometry_msgs.msg import PoseStamped
+from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
 import rclpy
 import json
 from rclpy.node import Node
-from rclpy.action import ActionClient
-
-
-class goto_pose:
-    def __init__(self, action_client):
-        self._action_client = action_client
-        self.goal_status = False
-        self.goal_accept_status = False
-        self.failure_flag = False
-
-    def goal_response_callback(self, future):
-        goal_handle = future.result()
-        if not goal_handle.accepted:
-            print("nav2 Goal Rejected")
-            self.goal_accept_status = False
-            return
-
-        print("nav2 Goal accepted")
-        self.goal_accept_status = True
-        self._goal_handle = goal_handle
-        self._get_result_future = goal_handle.get_result_async()
-        self._get_result_future.add_done_callback(self.get_result_callback)
-
-    def get_result_callback(self, future):
-        result = future.result().result
-        status = future.result().status
-        if status == GoalStatus.STATUS_SUCCEEDED:
-            print("navigation succeeded")
-            self.goal_status = True
-        elif status == GoalStatus.STATUS_CANCELED:
-            print("Goal Cancelling!")
-        else:
-            print("navigation failed!")
-            self.goal_status = False
-            self.failure_flag = True
-
-    def cancel_current_goal(self):
-        print("Canceling goal")
-        # Cancel the goal
-        future = self._goal_handle.cancel_goal_async()
-        future.add_done_callback(self.cancel_done)
-
-    def cancel_done(self, future):
-        cancel_response = future.result()
-        if len(cancel_response.goals_canceling) > 0:
-            print("Goal successfully canceled")
-        else:
-            print("Goal failed to cancel")
-
-    # send_goal would accept an array as a goal pose
-
-    def send_goal(self, goal_pose):
-        print("Waiting for action server")
-        self._action_client.wait_for_server()
-        goal_msg = NavigateToPose.Goal()
-        goal_msg.pose.pose.position.x = goal_pose[0]
-        goal_msg.pose.pose.position.y = goal_pose[1]
-        goal_msg.pose.pose.orientation.z = goal_pose[2]
-        goal_msg.pose.pose.orientation.w = goal_pose[3]
-        # fill up the rest later
-        print("Sending goal request")
-
-        self._send_goal_future = self._action_client.send_goal_async(goal_msg)
-
-        self._send_goal_future.add_done_callback(self.goal_response_callback)
-
-    def get_status(self):
-        status = {}
-        status["gs"] = self.goal_status
-        status["gas"] = self.goal_accept_status
-        status["f_flag"] = self.failure_flag
-        return status
-
-    def reset_status(self):
-        self.goal_status = False
-        self.goal_accept_status = False
-        self.failure_flag = False
 
 
 class ros2_main(Node):
     def __init__(self):
-        super().__init__("nav2_goal_manager")
-        self.goal_name_ = str()
-        self.sent_goal_name = str()
-        self.send_goal_ = False
-        self.cancel_goal_ = False
-        self.current_state_ = 0
-        self.timer = self.create_timer(0.02, self.timed_callback)
+        super().__init__("lv_goal_manager")
+        self.status = Int32()
+        self.nav2 = BasicNavigator()
+        self.msg = Goalactions()
         self.declare_parameter("load_file_path", "null")
         self.goal_file_path = (
             self.get_parameter("load_file_path").get_parameter_value().string_value
@@ -118,67 +37,61 @@ class ros2_main(Node):
         self.subscription = self.create_subscription(
             Goalactions,
             "goal_actions",
-            self.update_actions,
+            self.goal_callback,
             self.qos_profile_,
         )
         self.status_publisher = self.create_publisher(Int32, "goal_state", 10)
-        self.subscription
-        self.goto_pose_ = goto_pose(
-            ActionClient(self, NavigateToPose, "navigate_to_pose")
-        )
+        self.timer = self.create_timer(0.1, self.timer_callback)
 
-    def timed_callback(self):
-        # update statuses
-        nav2_status = self.goto_pose_.get_status()
-        if nav2_status["f_flag"] == True and self.current_state_ != 2:
-            self.current_state_ = 2
+    def goal_callback(self, m):
+        self.msg = m
 
-        elif self.cancel_goal_ == True and self.current_state_ == 2:
-            print("Resetting back to 0 state")
-            self.reset_all()
-        # if the cancel flag is true, we will cancel all goals and reset state.
-        if self.cancel_goal_ == True and self.current_state_ == 1:
-            print("Cancelling Goal")
-            self.goto_pose_.cancel_current_goal()
-            # reset all variables
-            self.reset_all()
+    def timer_callback(self):
+        done = self.nav2.isTaskComplete()
+        nav_result = self.nav2.getResult()
+        # if the robot has somehow failed(when not idling), then transition the state to 2
+        if nav_result == TaskResult.FAILED and done and self.status.data >= 1:
+            self.status.data = 2
+        # if the robot has reached the goal, reset the status
+        elif nav_result == TaskResult.SUCCEEDED and done:
+            self.status.data = 0
 
-        # send a goal to nav stack when the send_goal is true and there is a valid goal
-        elif (
-            (self.goal_name_ in self.goal_map_)
-            and self.current_state_ == 0
-            and self.send_goal_ == True
-        ):
-            self.goto_pose_.send_goal(self.goal_map_[self.goal_name_])
-            self.sent_goal_name = self.goal_name_
-            self.current_state_ = 1
-        # once the robot has reached the goal, reset state back to 0
-        elif (
-            self.current_state_ == 1
-            and nav2_status["gs"] == True
-            and nav2_status["gas"] == True
-        ):
-            print("Goal Reached!")
-            self.goto_pose_.reset_status()
-            # default send_goal_ back to false
-            self.send_goal_ = False
-            self.current_state_ = 0
-        self.pub_status(self.current_state_)
+        # if cancelled button is pressed, reset all goals
+        if (
+            self.status.data == 1 or self.status.data == 2
+        ) and self.msg.cancel_goal == True:
+            self.status.data = 0
+            self.nav2.cancelTask()
 
-    def pub_status(self, stat):
-        msg = Int32()
-        msg.data = stat
-        self.status_publisher.publish(msg)
+        # if the robot is idling and a new goal has been sent, then move to goal
+        if self.status.data == 0 and self.msg.send_goal == True:
+            goal_pose = PoseStamped()
+            goal_pose.header.frame_id = "map"
+            goal_pose.header.stamp = self.nav2.get_clock().now().to_msg()
 
-    def update_actions(self, msg):
-        self.goal_name_ = msg.goal_name
-        self.send_goal_ = msg.send_goal
-        self.cancel_goal_ = msg.cancel_goal
+            #  if the current goal name is tag, then we will use the goals from the tag
+            # TODO: maybe check if the goal is legit or not with some costmap checks
+            if self.msg.goal_name == "tag":
+                goal_pose.pose.position.x = self.msg.x
+                goal_pose.pose.position.y = self.msg.y
+                goal_pose.pose.orientation.z = self.msg.z
+                goal_pose.pose.orientation.w = self.msg.w
+                self.nav2.goToPose(goal_pose)
+                self.status.data = 1
+            #  otherwise, take it from the current goal list
+            elif self.msg.goal_name in self.goal_key_names_:
+                current_goal = self.goal_map_[self.msg.goal_name]
+                goal_pose.pose.position.x = current_goal[0]
+                goal_pose.pose.position.y = current_goal[1]
+                goal_pose.pose.orientation.z = current_goal[2]
+                goal_pose.pose.orientation.w = current_goal[3]
+                self.nav2.goToPose(goal_pose)
+                self.status.data = 1
+            else:
+                # the sent goal does not exist
+                self.status.data = 2
 
-    def reset_all(self):
-        self.sent_goal_name = ""
-        self.goto_pose_.reset_status()
-        self.current_state_ = 0
+        self.status_publisher.publish(self.status)
 
 
 def main(args=None):
