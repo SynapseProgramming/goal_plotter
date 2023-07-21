@@ -10,6 +10,7 @@ from nav2_msgs.msg import Costmap
 from nav_msgs.msg import OccupancyGrid
 import rclpy
 import json
+import numpy as np
 from rclpy.node import Node
 
 
@@ -47,7 +48,16 @@ class ros2_main(Node):
     #    function to get the latest global costmap from nav2
     def get_globalcostmap(self):
         nav2Costmap = self.nav2.getGlobalCostmap()
-        
+        # update values
+        self.costOccupancyGrid.header = nav2Costmap.header
+        self.costOccupancyGrid.data = np.array(nav2Costmap.data, dtype="i1").tolist()
+
+        self.costOccupancyGrid.info.map_load_time = nav2Costmap.metadata.map_load_time
+        self.costOccupancyGrid.info.resolution = nav2Costmap.metadata.resolution
+        self.costOccupancyGrid.info.width = nav2Costmap.metadata.size_x
+        self.costOccupancyGrid.info.height = nav2Costmap.metadata.size_y
+        self.costOccupancyGrid.info.origin = nav2Costmap.metadata.origin
+
 
     def goal_callback(self, msg):
         done = self.nav2.isTaskComplete()
@@ -73,6 +83,8 @@ class ros2_main(Node):
             #  if the current goal name is tag, then we will use the goals from the tag
             # TODO: maybe check if the goal is legit or not with some costmap checks
             if msg.goal_name == "tag":
+                self.get_globalcostmap()
+
                 goal_pose.pose.position.x = msg.x
                 goal_pose.pose.position.y = msg.y
                 goal_pose.pose.orientation.z = msg.z
