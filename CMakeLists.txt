@@ -26,6 +26,7 @@ find_package(visualization_msgs REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(action_msgs REQUIRED)
 find_package(nav2_msgs REQUIRED)
+find_package(common_interfaces REQUIRED)
 
 
 ament_python_install_package(${PROJECT_NAME})

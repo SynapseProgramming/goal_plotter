@@ -6,6 +6,8 @@ from std_msgs.msg import Int32
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 from geometry_msgs.msg import PoseStamped
 from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
+from nav2_msgs.msg import Costmap
+from nav_msgs.msg import OccupancyGrid
 import rclpy
 import json
 from rclpy.node import Node
@@ -16,6 +18,7 @@ class ros2_main(Node):
         super().__init__("lv_goal_manager")
         self.status = Int32()
         self.nav2 = BasicNavigator()
+        self.costOccupancyGrid = OccupancyGrid()
         self.declare_parameter("load_file_path", "null")
         self.goal_file_path = (
             self.get_parameter("load_file_path").get_parameter_value().string_value
@@ -40,6 +43,11 @@ class ros2_main(Node):
             self.qos_profile_,
         )
         self.status_publisher = self.create_publisher(Int32, "goal_state", 10)
+
+    #    function to get the latest global costmap from nav2
+    def get_globalcostmap(self):
+        nav2Costmap = self.nav2.getGlobalCostmap()
+        
 
     def goal_callback(self, msg):
         done = self.nav2.isTaskComplete()
