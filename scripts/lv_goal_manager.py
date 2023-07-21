@@ -6,8 +6,10 @@ from std_msgs.msg import Int32
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 from geometry_msgs.msg import PoseStamped
 from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
+from nav2_simple_commander.costmap_2d import PyCostmap2D
 from nav2_msgs.msg import Costmap
 from nav_msgs.msg import OccupancyGrid
+from footprint_collision_checker import FootprintCollisionChecker
 import rclpy
 import json
 import numpy as np
@@ -20,6 +22,7 @@ class ros2_main(Node):
         self.status = Int32()
         self.nav2 = BasicNavigator()
         self.costOccupancyGrid = OccupancyGrid()
+        self.footprintChecker = FootprintCollisionChecker()
         self.declare_parameter("load_file_path", "null")
         self.goal_file_path = (
             self.get_parameter("load_file_path").get_parameter_value().string_value
@@ -58,7 +61,6 @@ class ros2_main(Node):
         self.costOccupancyGrid.info.height = nav2Costmap.metadata.size_y
         self.costOccupancyGrid.info.origin = nav2Costmap.metadata.origin
 
-
     def goal_callback(self, msg):
         done = self.nav2.isTaskComplete()
         nav_result = self.nav2.getResult()
@@ -84,6 +86,13 @@ class ros2_main(Node):
             # TODO: maybe check if the goal is legit or not with some costmap checks
             if msg.goal_name == "tag":
                 self.get_globalcostmap()
+                latestglobal = PyCostmap2D(self.costOccupancyGrid)
+                self.footprintChecker.setCostmap(latestglobal)
+
+                # world to map validated 
+
+                # call point cost
+                
 
                 goal_pose.pose.position.x = msg.x
                 goal_pose.pose.position.y = msg.y
