@@ -4,12 +4,13 @@
 from goal_plotter_messages.msg import Goalactions
 from std_msgs.msg import Int32
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, PolygonStamped
 from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
 from nav2_msgs.msg import Costmap
 from nav_msgs.msg import OccupancyGrid
 from footprint_collision_checker import FootprintCollisionChecker
 from costmap_2d import PyCostmap2D
+from footprint_generator import FootprintGenerator
 import rclpy
 import json
 import numpy as np
@@ -23,6 +24,8 @@ class ros2_main(Node):
         self.nav2 = BasicNavigator()
         self.costOccupancyGrid = OccupancyGrid()
         self.footprintChecker = FootprintCollisionChecker()
+        self.footprintgen = FootprintGenerator(0.30)
+        self.tagfootprint = PolygonStamped()
         self.declare_parameter("load_file_path", "null")
         self.goal_file_path = (
             self.get_parameter("load_file_path").get_parameter_value().string_value
@@ -47,6 +50,7 @@ class ros2_main(Node):
             self.qos_profile_,
         )
         self.status_publisher = self.create_publisher(Int32, "goal_state", 10)
+        self.tagoal_publisher = self.create_publisher(PolygonStamped, "tag_pose", 10)
 
     #    function to get the latest global costmap from nav2
     def get_globalcostmap(self):
@@ -89,6 +93,14 @@ class ros2_main(Node):
                 latestglobal = PyCostmap2D(self.costOccupancyGrid)
                 self.footprintChecker.setCostmap(latestglobal)
 
+                self.footprintgen.setPose(msg.x, msg.y)
+                bot_footprint = self.footprintgen.getFootprint()
+
+                # update visualization
+                self.tagfootprint.polygon = bot_footprint
+                self.tagfootprint.header.stamp = self.nav2.get_clock().now().to_msg()
+                self.tagfootprint.header.frame_id = "map"
+
                 # world to map validated
                 cx, cy = self.footprintChecker.worldToMapValidated(msg.x, msg.y)
 
@@ -123,6 +135,7 @@ class ros2_main(Node):
                 self.status.data = 2
 
         self.status_publisher.publish(self.status)
+        self.tagoal_publisher.publish(self.tagfootprint)
 
 
 def main(args=None):
