@@ -114,18 +114,19 @@ class ros2_main(Node):
                 self.tagfootprint.polygon = bot_footprint
                 self.tagfootprint.header.stamp = self.nav2.get_clock().now().to_msg()
 
-                #   print the cost of the footprint
+                #   get the cost of the footprint
                 cost = self.footprintChecker.footprintCost(bot_footprint)
-                print(cost)
 
-                # call point cost
-
-                goal_pose.pose.position.x = msg.x
-                goal_pose.pose.position.y = msg.y
-                goal_pose.pose.orientation.z = msg.z
-                goal_pose.pose.orientation.w = msg.w
-                self.nav2.goToPose(goal_pose)
-                self.status.data = 1
+                print("dynamic goal cost: " + str(cost))
+                if cost < self.reject_cost:
+                    goal_pose.pose.position.x = msg.x
+                    goal_pose.pose.position.y = msg.y
+                    goal_pose.pose.orientation.z = msg.z
+                    goal_pose.pose.orientation.w = msg.w
+                    self.nav2.goToPose(goal_pose)
+                    self.status.data = 1
+                else:
+                    self.status.data = 2
             #  otherwise, take it from the current goal list
             elif msg.goal_name in self.goal_key_names_:
                 current_goal = self.goal_map_[msg.goal_name]
