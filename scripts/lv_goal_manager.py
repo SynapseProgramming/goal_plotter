@@ -117,8 +117,10 @@ class ros2_main(Node):
                 #   get the cost of the footprint
                 cost = self.footprintChecker.footprintCost(bot_footprint)
 
+                q_error = abs(msg.z * msg.z + msg.w * msg.w - 1.0)
+
                 print("dynamic goal cost: " + str(cost))
-                if cost < self.reject_cost:
+                if cost < self.reject_cost and q_error <= 0.01:
                     goal_pose.pose.position.x = msg.x
                     goal_pose.pose.position.y = msg.y
                     goal_pose.pose.orientation.z = msg.z
