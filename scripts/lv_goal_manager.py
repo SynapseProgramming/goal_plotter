@@ -89,10 +89,19 @@ class ros2_main(Node):
                 latestglobal = PyCostmap2D(self.costOccupancyGrid)
                 self.footprintChecker.setCostmap(latestglobal)
 
-                # world to map validated 
+                # world to map validated
+                cx, cy = self.footprintChecker.worldToMapValidated(msg.x, msg.y)
+
+                cost = 0
+                if cx is None or cy is None:
+                    print("out of bounds!")
+                    cost = 254
+                else:
+                    cost = self.footprintChecker.pointCost(cx, cy)
+
+                print(cost)
 
                 # call point cost
-                
 
                 goal_pose.pose.position.x = msg.x
                 goal_pose.pose.position.y = msg.y
