@@ -101,7 +101,6 @@ class ros2_main(Node):
             goal_pose.header.stamp = self.nav2.get_clock().now().to_msg()
 
             #  if the current goal name is tag, then we will use the goals from the tag
-            # TODO: maybe check if the goal is legit or not with some costmap checks
             if msg.goal_name == "tag":
                 self.get_globalcostmap()
                 latestglobal = PyCostmap2D(self.costOccupancyGrid)
