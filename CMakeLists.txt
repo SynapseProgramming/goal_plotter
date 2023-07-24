@@ -74,6 +74,7 @@ install(PROGRAMS
   scripts/lv_goal_manager.py
   scripts/lv_goal_converter.py
   scripts/footprint_collision_checker.py
+  scripts/costmap_2d.py
   DESTINATION lib/${PROJECT_NAME})
 
 
