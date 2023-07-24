@@ -4,10 +4,16 @@
 from goal_plotter_messages.msg import Goalactions
 from std_msgs.msg import Int32
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, PolygonStamped
 from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
+from nav2_msgs.msg import Costmap
+from nav_msgs.msg import OccupancyGrid
+from footprint_collision_checker import FootprintCollisionChecker
+from costmap_2d import PyCostmap2D
+from footprint_generator import FootprintGenerator
 import rclpy
 import json
+import numpy as np
 from rclpy.node import Node
 
 
@@ -16,6 +22,10 @@ class ros2_main(Node):
         super().__init__("lv_goal_manager")
         self.status = Int32()
         self.nav2 = BasicNavigator()
+        self.costOccupancyGrid = OccupancyGrid()
+        self.footprintChecker = FootprintCollisionChecker()
+        self.footprintgen = FootprintGenerator(0.30)
+        self.tagfootprint = PolygonStamped()
         self.declare_parameter("load_file_path", "null")
         self.goal_file_path = (
             self.get_parameter("load_file_path").get_parameter_value().string_value
@@ -40,6 +50,20 @@ class ros2_main(Node):
             self.qos_profile_,
         )
         self.status_publisher = self.create_publisher(Int32, "goal_state", 10)
+        self.tagoal_publisher = self.create_publisher(PolygonStamped, "tag_pose", 10)
+
+    #    function to get the latest global costmap from nav2
+    def get_globalcostmap(self):
+        nav2Costmap = self.nav2.getGlobalCostmap()
+        # update values
+        self.costOccupancyGrid.header = nav2Costmap.header
+        self.costOccupancyGrid.data = np.array(nav2Costmap.data, dtype="i1").tolist()
+
+        self.costOccupancyGrid.info.map_load_time = nav2Costmap.metadata.map_load_time
+        self.costOccupancyGrid.info.resolution = nav2Costmap.metadata.resolution
+        self.costOccupancyGrid.info.width = nav2Costmap.metadata.size_x
+        self.costOccupancyGrid.info.height = nav2Costmap.metadata.size_y
+        self.costOccupancyGrid.info.origin = nav2Costmap.metadata.origin
 
     def goal_callback(self, msg):
         done = self.nav2.isTaskComplete()
@@ -65,6 +89,26 @@ class ros2_main(Node):
             #  if the current goal name is tag, then we will use the goals from the tag
             # TODO: maybe check if the goal is legit or not with some costmap checks
             if msg.goal_name == "tag":
+                self.get_globalcostmap()
+                latestglobal = PyCostmap2D(self.costOccupancyGrid)
+                self.footprintChecker.setCostmap(latestglobal)
+
+                self.footprintgen.setPose(msg.x, msg.y)
+                bot_footprint = self.footprintgen.getFootprint()
+
+                # update visualization
+                self.tagfootprint.polygon = bot_footprint
+                self.tagfootprint.header.stamp = self.nav2.get_clock().now().to_msg()
+                self.tagfootprint.header.frame_id = "map"
+
+
+            #   print the cost of the footprint
+                cost = self.footprintChecker.footprintCost(bot_footprint)
+                print(cost)
+
+
+                # call point cost
+
                 goal_pose.pose.position.x = msg.x
                 goal_pose.pose.position.y = msg.y
                 goal_pose.pose.orientation.z = msg.z
@@ -85,6 +129,7 @@ class ros2_main(Node):
                 self.status.data = 2
 
         self.status_publisher.publish(self.status)
+        self.tagoal_publisher.publish(self.tagfootprint)
 
 
 def main(args=None):

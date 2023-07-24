@@ -26,6 +26,7 @@ find_package(visualization_msgs REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(action_msgs REQUIRED)
 find_package(nav2_msgs REQUIRED)
+find_package(common_interfaces REQUIRED)
 
 
 ament_python_install_package(${PROJECT_NAME})
@@ -72,6 +73,9 @@ install(PROGRAMS
   scripts/goal_gui.py
   scripts/lv_goal_manager.py
   scripts/lv_goal_converter.py
+  scripts/footprint_collision_checker.py
+  scripts/costmap_2d.py
+  scripts/footprint_generator.py
   DESTINATION lib/${PROJECT_NAME})
 
 
