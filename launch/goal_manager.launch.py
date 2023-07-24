@@ -6,7 +6,6 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-
     # goal file to load poses from
     load_goal_file = "goal_test.json"
 
@@ -18,7 +17,9 @@ def generate_launch_description():
         executable="lv_goal_manager.py",
         name="goal_manager",
         emulate_tty=True,
-        parameters=[{"load_file_path": load_file_path}],
+        parameters=[
+            {"load_file_path": load_file_path, "robot_radius": 0.3, "reject_cost": 253}
+        ],
         output="screen",
     )
 

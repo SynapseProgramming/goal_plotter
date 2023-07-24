@@ -20,16 +20,30 @@ from rclpy.node import Node
 class ros2_main(Node):
     def __init__(self):
         super().__init__("lv_goal_manager")
+
+        self.declare_parameter("load_file_path", "null")
+        self.declare_parameter("robot_radius", 0.5)
+        self.declare_parameter("reject_cost", 254)
+        self.goal_file_path = (
+            self.get_parameter("load_file_path").get_parameter_value().string_value
+        )
+        self.robot_radius = (
+            self.get_parameter("robot_radius").get_parameter_value().double_value
+        )
+
+        self.reject_cost = (
+            self.get_parameter("reject_cost").get_parameter_value().integer_value
+        )
+
         self.status = Int32()
         self.nav2 = BasicNavigator()
         self.costOccupancyGrid = OccupancyGrid()
         self.footprintChecker = FootprintCollisionChecker()
-        self.footprintgen = FootprintGenerator(0.30)
+        self.footprintgen = FootprintGenerator(self.robot_radius)
         self.tagfootprint = PolygonStamped()
-        self.declare_parameter("load_file_path", "null")
-        self.goal_file_path = (
-            self.get_parameter("load_file_path").get_parameter_value().string_value
-        )
+
+        self.tagfootprint.header.frame_id = "map"
+        self.tagfootprint.header.stamp = self.nav2.get_clock().now().to_msg()
         self.goal_file_ = open(self.goal_file_path)
         self.qos_profile_ = QoSProfile(
             reliability=QoSReliabilityPolicy.BEST_EFFORT,
@@ -99,13 +113,10 @@ class ros2_main(Node):
                 # update visualization
                 self.tagfootprint.polygon = bot_footprint
                 self.tagfootprint.header.stamp = self.nav2.get_clock().now().to_msg()
-                self.tagfootprint.header.frame_id = "map"
 
-
-            #   print the cost of the footprint
+                #   print the cost of the footprint
                 cost = self.footprintChecker.footprintCost(bot_footprint)
                 print(cost)
-
 
                 # call point cost
 
