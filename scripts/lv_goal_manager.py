@@ -6,10 +6,10 @@ from std_msgs.msg import Int32
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 from geometry_msgs.msg import PoseStamped
 from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
-from nav2_simple_commander.costmap_2d import PyCostmap2D
 from nav2_msgs.msg import Costmap
 from nav_msgs.msg import OccupancyGrid
 from footprint_collision_checker import FootprintCollisionChecker
+from costmap_2d import PyCostmap2D
 import rclpy
 import json
 import numpy as np
