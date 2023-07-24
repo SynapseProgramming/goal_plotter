@@ -101,17 +101,11 @@ class ros2_main(Node):
                 self.tagfootprint.header.stamp = self.nav2.get_clock().now().to_msg()
                 self.tagfootprint.header.frame_id = "map"
 
-                # world to map validated
-                cx, cy = self.footprintChecker.worldToMapValidated(msg.x, msg.y)
 
-                cost = 0
-                if cx is None or cy is None:
-                    print("out of bounds!")
-                    cost = 254
-                else:
-                    cost = self.footprintChecker.pointCost(cx, cy)
-
+            #   print the cost of the footprint
+                cost = self.footprintChecker.footprintCost(bot_footprint)
                 print(cost)
+
 
                 # call point cost
 
