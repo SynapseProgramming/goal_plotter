@@ -11,6 +11,7 @@ from nav_msgs.msg import OccupancyGrid
 from footprint_collision_checker import FootprintCollisionChecker
 from costmap_2d import PyCostmap2D
 from footprint_generator import FootprintGenerator
+from visualization_msgs.msg import Marker
 import rclpy
 import json
 import numpy as np
@@ -41,6 +42,18 @@ class ros2_main(Node):
         self.footprintChecker = FootprintCollisionChecker()
         self.footprintgen = FootprintGenerator(self.robot_radius)
         self.tagfootprint = PolygonStamped()
+        self.markerdir = Marker()
+
+        self.markerdir.pose.orientation.z = 1.0
+        self.markerdir.scale.x = 0.3
+        self.markerdir.scale.y = 0.05
+        self.markerdir.scale.z = 0.02
+        self.markerdir.color.a = 1.0
+        self.markerdir.color.r = 0.0
+        self.markerdir.color.g = 0.0
+        self.markerdir.color.b = 250.0
+        self.markerdir.header.frame_id = "map"
+        self.markerdir.type = 0
 
         self.tagfootprint.header.frame_id = "map"
         self.tagfootprint.header.stamp = self.nav2.get_clock().now().to_msg()
@@ -65,6 +78,7 @@ class ros2_main(Node):
         )
         self.status_publisher = self.create_publisher(Int32, "goal_state", 10)
         self.tagoal_publisher = self.create_publisher(PolygonStamped, "tag_pose", 10)
+        self.arrow_publisher = self.create_publisher(Marker, "tag_direction", 10)
 
     #    function to get the latest global costmap from nav2
     def get_globalcostmap(self):
@@ -82,6 +96,22 @@ class ros2_main(Node):
     def goal_callback(self, msg):
         done = self.nav2.isTaskComplete()
         nav_result = self.nav2.getResult()
+
+        q_error = abs(msg.z * msg.z + msg.w * msg.w - 1.0)
+
+        self.footprintgen.setPose(msg.x, msg.y)
+        bot_footprint = self.footprintgen.getFootprint()
+
+        # update visualization
+        self.tagfootprint.polygon = bot_footprint
+        self.tagfootprint.header.stamp = self.nav2.get_clock().now().to_msg()
+
+        self.markerdir.pose.position.x = msg.x
+        self.markerdir.pose.position.y = msg.y
+        if q_error <= 0.01:
+            self.markerdir.pose.orientation.z = msg.z
+            self.markerdir.pose.orientation.w = msg.w
+
         # if the robot has somehow failed(when not idling), then transition the state to 2
         if nav_result == TaskResult.FAILED and done and self.status.data >= 1:
             self.status.data = 2
@@ -106,17 +136,8 @@ class ros2_main(Node):
                 latestglobal = PyCostmap2D(self.costOccupancyGrid)
                 self.footprintChecker.setCostmap(latestglobal)
 
-                self.footprintgen.setPose(msg.x, msg.y)
-                bot_footprint = self.footprintgen.getFootprint()
-
-                # update visualization
-                self.tagfootprint.polygon = bot_footprint
-                self.tagfootprint.header.stamp = self.nav2.get_clock().now().to_msg()
-
                 #   get the cost of the footprint
                 cost = self.footprintChecker.footprintCost(bot_footprint)
-
-                q_error = abs(msg.z * msg.z + msg.w * msg.w - 1.0)
 
                 print("dynamic goal cost: " + str(cost))
                 if cost < self.reject_cost and q_error <= 0.01:
@@ -143,6 +164,7 @@ class ros2_main(Node):
 
         self.status_publisher.publish(self.status)
         self.tagoal_publisher.publish(self.tagfootprint)
+        self.arrow_publisher.publish(self.markerdir)
 
 
 def main(args=None):
