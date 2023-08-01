@@ -18,7 +18,7 @@ def generate_launch_description():
         name="goal_manager",
         emulate_tty=True,
         parameters=[
-            {"load_file_path": load_file_path, "robot_radius": 0.3, "reject_cost": 253}
+            {"load_file_path": load_file_path, "robot_radius": 0.3, "reject_cost": 254}
         ],
         output="screen",
     )
